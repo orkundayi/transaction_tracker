@@ -2,7 +2,7 @@ import 'category.dart';
 import 'installment.dart';
 
 class TransactionModel {
-  final String userId;
+  String userId;
   String id;
   String? title;
   TransactionType type;
@@ -65,6 +65,7 @@ class TransactionModel {
       'currencyCode': currencyCode,
       'category': category?.toMap(category),
       'note': note,
+      'installments': installments?.map((e) => e.toMap()).toList(),
     };
   }
 }

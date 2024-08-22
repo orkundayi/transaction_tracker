@@ -18,11 +18,12 @@ dependencies:
   line_icons: ^2.0.3
   xml: ^6.5.0
   bloc: ^8.1.4
-  
-  
+  flutter_bloc: ^8.1.6
+  meta: ^1.12.0
   transaction_repository:
     path: packages/transaction_repository
-  meta: ^1.12.0
+  
+  
 
 dev_dependencies:
   flutter_test:

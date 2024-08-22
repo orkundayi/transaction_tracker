@@ -1,14 +1,12 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class CategoryModel {
-  String id;
   String name;
   CategoryType? type;
   FaIcon? categoryIcon;
   String? description;
 
   CategoryModel({
-    required this.id,
     required this.name,
     required this.type,
     required this.categoryIcon,
@@ -17,7 +15,6 @@ class CategoryModel {
 
   factory CategoryModel.fromMap(Map<String, dynamic> map) {
     return CategoryModel(
-      id: map['id'],
       name: map['name'],
       type: CategoryType.values[map['type']],
       categoryIcon: getCategoryIcon(CategoryType.values[map['type']]),
@@ -27,12 +24,18 @@ class CategoryModel {
 
   Map<String, dynamic> toMap(CategoryModel? category) {
     return {
-      'id': id,
       'name': name,
       'type': type?.index,
-      'categoryIcon': categoryIcon,
       'description': description,
     };
+  }
+
+  factory CategoryModel.empty() {
+    return CategoryModel(
+      name: '',
+      type: CategoryType.other,
+      categoryIcon: getCategoryIcon(CategoryType.other),
+    );
   }
 }
 

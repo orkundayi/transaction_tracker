@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:transaction_repository/transaction_repository.dart';
@@ -15,9 +17,9 @@ class _AddExpenseState extends State<AddExpense> {
   String _currentCurrency = 'TR';
 
   bool isInstallment = false;
-  int? installmentCount;
   DateTime? installmentDate;
   DateTime? paymentDate;
+  CategoryType? categoryType;
 
   final TextEditingController _currencyController = TextEditingController();
   final TextEditingController _categoryController =
@@ -31,62 +33,85 @@ class _AddExpenseState extends State<AddExpense> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Gider Ekle'),
-          centerTitle: true,
-          backgroundColor: Colors.white,
-        ),
-        body: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: FittedBox(
-            fit: BoxFit.fitWidth,
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  currencyTextFormField(),
-                  const SizedBox(height: 16),
-                  categoryTextFormField(),
-                  const SizedBox(height: 16),
-                  paymentInfo(),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.9,
-                    height: kToolbarHeight,
-                    child: TextButton(
-                      onPressed: () async {
-                        final TransactionModel transaction =
-                            TransactionModel.empty();
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
+    return BlocProvider.value(
+      value: context.read<CreateTransactionBloc>(),
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Gider Ekle'),
+            centerTitle: true,
+            backgroundColor: Colors.white,
+          ),
+          body: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: FittedBox(
+              fit: BoxFit.fitWidth,
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    currencyTextFormField(),
+                    const SizedBox(height: 16),
+                    categoryTextFormField(),
+                    const SizedBox(height: 16),
+                    paymentInfo(),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      height: kToolbarHeight,
+                      child: TextButton(
+                        onPressed: () async {
+                          final TransactionModel transaction =
+                              TransactionModel.empty();
+                          transaction.amount =
+                              double.parse(_currencyController.text);
+                          transaction.currencyCode = _currentCurrency;
+                          transaction.category = CategoryModel.empty();
+                          transaction.category!.name = _categoryController.text;
+                          transaction.category!.type = categoryType;
+                          transactionCalculate(transaction);
+                          debugPrint(transaction.toString());
+                          context
+                              .read<CreateTransactionBloc>()
+                              .add(CreateTransaction(transaction: transaction));
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          shadowColor: Colors.black,
+                          elevation: 1,
                         ),
-                        shadowColor: Colors.black,
-                        elevation: 1,
-                      ),
-                      child: const Text(
-                        'Gider Ekle',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                        child: const Text(
+                          'Gider Ekle',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  void transactionCalculate(TransactionModel transaction) {
+    if (isInstallment) {
+      transaction.installments = createInstallments();
+    } else {
+      transaction.date = paymentDate!;
+    }
+    transaction.type = TransactionType.expense;
   }
 
   Future<void> getCurrencyList() async {
@@ -310,6 +335,7 @@ class _AddExpenseState extends State<AddExpense> {
                             onTap: () {
                               _categoryController.text =
                                   getCategoryName(categoryType);
+                              this.categoryType = categoryType;
                               setState(() {});
                               Navigator.of(context).pop();
                             },
@@ -718,5 +744,32 @@ class _AddExpenseState extends State<AddExpense> {
         ),
       ],
     );
+  }
+
+  List<InstallmentModel>? createInstallments() {
+    CurrencyModel currency = CurrencyModel.empty();
+    currency.currencyCode = _currentCurrency;
+    currency.kod = _currentCurrency;
+    final int? installmentCount =
+        int.tryParse(_installmentCountController.text);
+    if (installmentCount != null && installmentDate != null) {
+      List<InstallmentModel> installments = [];
+      for (int i = 0; i < installmentCount; i++) {
+        installments.add(
+          InstallmentModel(
+            installmentNumber: i + 1,
+            amount: double.parse(_currencyController.text) / installmentCount,
+            dueDate: DateTime(
+              installmentDate!.year,
+              installmentDate!.month + i,
+              installmentDate!.day,
+            ),
+            currency: currency,
+          ),
+        );
+      }
+      return installments;
+    }
+    return null;
   }
 }

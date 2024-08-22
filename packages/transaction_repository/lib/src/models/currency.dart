@@ -78,18 +78,20 @@ class CurrencyModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'kod': kod,
       'currencyCode': currencyCode,
-      'unit': unit,
-      'name': name,
-      'currencyName': currencyName,
-      'forexBuying': forexBuying,
-      'forexSelling': forexSelling,
-      'banknoteBuying': banknoteBuying,
-      'banknoteSelling': banknoteSelling,
-      'crossRateUSD': crossRateUSD,
-      'crossRateOther': crossRateOther,
     };
+  }
+
+  factory CurrencyModel.empty() {
+    return CurrencyModel(
+      kod: '',
+      currencyCode: '',
+      unit: 0,
+      name: '',
+      currencyName: '',
+      forexBuying: 0.0,
+      forexSelling: 0.0,
+    );
   }
 }
 

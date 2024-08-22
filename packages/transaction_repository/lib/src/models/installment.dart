@@ -13,6 +13,15 @@ class InstallmentModel {
     required this.currency,
   });
 
+  factory InstallmentModel.empty() {
+    return InstallmentModel(
+      installmentNumber: 0,
+      amount: 0.0,
+      dueDate: DateTime.now(),
+      currency: CurrencyModel.empty(),
+    );
+  }
+
   factory InstallmentModel.fromMap(Map<String, dynamic> json) {
     return InstallmentModel(
       installmentNumber: json['installmentNumber'] as int,

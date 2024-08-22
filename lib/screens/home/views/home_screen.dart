@@ -2,9 +2,12 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import 'package:flutter_application/screens/add_expense/views/add_expense.dart';
 import 'package:flutter_application/screens/home/views/main_screen.dart';
 import 'package:flutter_application/screens/stats/stats_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:transaction_repository/transaction_repository.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -62,7 +65,12 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () async {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const AddExpense(),
+              builder: (context) => BlocProvider(
+                create: (context) => CreateTransactionBloc(
+                  FirebaseTransactionRepository(),
+                ),
+                child: const AddExpense(),
+              ),
             ),
           );
         },
