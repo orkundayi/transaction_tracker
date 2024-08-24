@@ -2,8 +2,11 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:transaction_repository/transaction_repository.dart';
 import 'package:intl/intl.dart';
+
+import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -214,75 +217,77 @@ class MainScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  FutureBuilder(
-                    future: FirebaseTransactionRepository().fetchLastTransactionsForUser(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: CircularProgressIndicator(),
+                  BlocBuilder<GetUserTransactionsBloc, FetchTransactionState>(
+                    builder: (context, state) {
+                      if (state is FetchingInProgress) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (state is FetchingSuccess) {
+                        final transactions = state.transactions;
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: transactions.length,
+                          itemBuilder: (context, index) {
+                            final transaction = transactions[index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: transaction.type == TransactionType.income ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: getCategoryIcon(transaction.category?.type),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      transaction.category?.name ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Column(
+                                      children: [
+                                        Text(
+                                          '${getCurrencySymbolFromCurrencyCode(transaction.currencyCode)} ${transaction.amount}',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          DateFormat('dd MMM yyyy').format(transaction.date),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(width: 10),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         );
+                      } else if (state is TransactionFetchError) {
+                        return Center(child: Text('Veriler yüklenirken hata oluştu: ${state.error}'));
+                      } else {
+                        return const Center(child: Text('Veri yok.'));
                       }
-                      final transactions = snapshot.data as List<TransactionModel>;
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: transactions.length,
-                        itemBuilder: (context, index) {
-                          final TransactionModel transaction = transactions[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: transaction.type == TransactionType.income ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: getCategoryIcon(transaction.category?.type),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    transaction.category?.name ?? '',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Column(
-                                    children: [
-                                      Text(
-                                        '${getCurrencySymbolFromCurrencyCode(transaction.currencyCode)} ${transaction.amount}',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        DateFormat('dd MMM yyyy').format(transaction.date),
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(width: 10),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      );
                     },
-                  ),
+                  )
                 ],
               ),
             ],

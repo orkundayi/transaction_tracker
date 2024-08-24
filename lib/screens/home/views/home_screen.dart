@@ -3,12 +3,13 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
-import 'package:flutter_application/blocs/get_transaction_bloc/get_transaction_bloc.dart';
 import 'package:flutter_application/screens/add_expense/views/add_expense.dart';
 import 'package:flutter_application/screens/home/views/main_screen.dart';
 import 'package:flutter_application/screens/stats/stats_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:transaction_repository/transaction_repository.dart';
+
+import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +19,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  @override
+  initState() {
+    super.initState();
+    context.read<GetUserTransactionsBloc>().add(const FetchLastTransactions());
+  }
+
   int index = 0;
 
   @override
@@ -25,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       body: BlocProvider.value(
-        value: BlocProvider.of<GetTransactionBloc>(context),
+        value: BlocProvider.of<GetUserTransactionsBloc>(context),
         child: IndexedStack(
           index: index,
           children: const <Widget>[
@@ -70,7 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         shape: const CircleBorder(),
         onPressed: () async {
-          Navigator.of(context).push(
+          await Navigator.of(context)
+              .push(
             MaterialPageRoute(
               builder: (context) => BlocProvider(
                 create: (context) => CreateTransactionBloc(
@@ -79,7 +87,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const AddExpense(),
               ),
             ),
-          );
+          )
+              .then((_) {
+            context.read<GetUserTransactionsBloc>().add(const FetchLastTransactions());
+          });
         },
         child: Container(
           width: 60,

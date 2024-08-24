@@ -22,10 +22,8 @@ class _AddExpenseState extends State<AddExpense> {
   CategoryType? categoryType;
 
   final TextEditingController _currencyController = TextEditingController();
-  final TextEditingController _categoryController =
-      TextEditingController(text: 'Kategori Seçin');
-  final TextEditingController _installmentCountController =
-      TextEditingController();
+  final TextEditingController _categoryController = TextEditingController(text: 'Kategori Seçin');
+  final TextEditingController _installmentCountController = TextEditingController();
 
   void _toggleCurrency() async {
     await getCurrencyList();
@@ -36,29 +34,7 @@ class _AddExpenseState extends State<AddExpense> {
     return BlocProvider.value(
       value: context.read<CreateTransactionBloc>(),
       child: BlocListener<CreateTransactionBloc, CreateTransactionState>(
-        listener: (context, state) {
-          if (state is CreateTransactionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Gider başarıyla eklendi!'),
-              ),
-            );
-            Navigator.pop(context);
-          } else if (state is CreateTransactionFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.error.toString()),
-                backgroundColor: Colors.red,
-              ),
-            );
-          } else if (state is CreateTransactionInProgress) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Gider ekleniyor...'),
-              ),
-            );
-          }
-        },
+        listener: (context, state) {},
         child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
           child: Scaffold(
@@ -88,19 +64,15 @@ class _AddExpenseState extends State<AddExpense> {
                         height: kToolbarHeight,
                         child: TextButton(
                           onPressed: () async {
-                            final TransactionModel transaction =
-                                TransactionModel.empty();
-                            transaction.amount =
-                                double.parse(_currencyController.text);
+                            final TransactionModel transaction = TransactionModel.empty();
+                            transaction.amount = double.parse(_currencyController.text);
                             transaction.currencyCode = _currentCurrency;
                             transaction.category = CategoryModel.empty();
-                            transaction.category!.name =
-                                _categoryController.text;
+                            transaction.category!.name = _categoryController.text;
                             transaction.category!.type = categoryType;
                             transactionCalculate(transaction);
                             debugPrint(transaction.toString());
-                            context.read<CreateTransactionBloc>().add(
-                                CreateTransaction(transaction: transaction));
+                            context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
                           },
                           style: TextButton.styleFrom(
                             backgroundColor: Colors.white,
@@ -140,8 +112,7 @@ class _AddExpenseState extends State<AddExpense> {
   }
 
   Future<void> getCurrencyList() async {
-    final response =
-        await http.get(Uri.parse('https://www.tcmb.gov.tr/kurlar/today.xml'));
+    final response = await http.get(Uri.parse('https://www.tcmb.gov.tr/kurlar/today.xml'));
 
     if (response.statusCode == 200) {
       var currencies = await parseCurrencyFromResponse(response.body);
@@ -181,8 +152,7 @@ class _AddExpenseState extends State<AddExpense> {
                             ),
                           ),
                           trailing: Text(
-                            getCurrencySymbolFromCurrencyCode(
-                                currency.currencyCode),
+                            getCurrencySymbolFromCurrencyCode(currency.currencyCode),
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -343,8 +313,7 @@ class _AddExpenseState extends State<AddExpense> {
                         itemCount: CategoryType.values.length,
                         padding: const EdgeInsets.all(8),
                         itemBuilder: (context, index) {
-                          CategoryType categoryType =
-                              CategoryType.values[index];
+                          CategoryType categoryType = CategoryType.values[index];
                           return ListTile(
                             title: Text(
                               getCategoryName(categoryType),
@@ -358,8 +327,7 @@ class _AddExpenseState extends State<AddExpense> {
                               borderRadius: BorderRadius.circular(24),
                             ),
                             onTap: () {
-                              _categoryController.text =
-                                  getCategoryName(categoryType);
+                              _categoryController.text = getCategoryName(categoryType);
                               this.categoryType = categoryType;
                               setState(() {});
                               Navigator.of(context).pop();
@@ -661,8 +629,7 @@ class _AddExpenseState extends State<AddExpense> {
                           ],
                         ),
                       ),
-                      hintText:
-                          'Taksit Ödeme Günü: ${installmentDate?.toLocal().toString().split(' ')[0] ?? 'Seçin'}',
+                      hintText: 'Taksit Ödeme Günü: ${installmentDate?.toLocal().toString().split(' ')[0] ?? 'Seçin'}',
                       hintTextDirection: TextDirection.ltr,
                       border: const OutlineInputBorder(
                         borderSide: BorderSide.none,
@@ -741,8 +708,7 @@ class _AddExpenseState extends State<AddExpense> {
                           ],
                         ),
                       ),
-                      hintText:
-                          'Ödeme Tarihi: ${paymentDate?.toLocal().toString().split(' ')[0] ?? 'Seçin'}',
+                      hintText: 'Ödeme Tarihi: ${paymentDate?.toLocal().toString().split(' ')[0] ?? 'Seçin'}',
                       hintTextDirection: TextDirection.ltr,
                       border: const OutlineInputBorder(
                         borderSide: BorderSide.none,
@@ -775,8 +741,7 @@ class _AddExpenseState extends State<AddExpense> {
     CurrencyModel currency = CurrencyModel.empty();
     currency.currencyCode = _currentCurrency;
     currency.kod = _currentCurrency;
-    final int? installmentCount =
-        int.tryParse(_installmentCountController.text);
+    final int? installmentCount = int.tryParse(_installmentCountController.text);
     if (installmentCount != null && installmentDate != null) {
       List<InstallmentModel> installments = [];
       for (int i = 0; i < installmentCount; i++) {
