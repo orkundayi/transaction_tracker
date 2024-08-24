@@ -5,15 +5,15 @@ import 'package:transaction_repository/transaction_repository.dart';
 part 'create_transaction_event.dart';
 part 'create_transaction_state.dart';
 
-class CreateTransactionBloc
-    extends Bloc<CreateTransactionEvent, CreateTransactionState> {
+class CreateTransactionBloc extends Bloc<CreateTransactionEvent, CreateTransactionState> {
   final TransactionRepository transactionRepository;
-  CreateTransactionBloc(this.transactionRepository)
-      : super(CreateTransactionInitial()) {
+
+  CreateTransactionBloc(this.transactionRepository) : super(CreateTransactionInitial()) {
     on<CreateTransactionEvent>((event, emit) async {
-      emit(CreateTransactionLoading());
+      emit(CreateTransactionInProgress());
       try {
         await transactionRepository.createTransaction(event.transaction);
+        emit(CreateTransactionSuccess(event.transaction));
       } catch (e) {
         emit(CreateTransactionFailure(e));
       }

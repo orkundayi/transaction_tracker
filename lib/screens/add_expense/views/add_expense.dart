@@ -35,67 +35,92 @@ class _AddExpenseState extends State<AddExpense> {
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: context.read<CreateTransactionBloc>(),
-      child: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Gider Ekle'),
-            centerTitle: true,
-            backgroundColor: Colors.white,
-          ),
-          body: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: FittedBox(
-              fit: BoxFit.fitWidth,
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    currencyTextFormField(),
-                    const SizedBox(height: 16),
-                    categoryTextFormField(),
-                    const SizedBox(height: 16),
-                    paymentInfo(),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.9,
-                      height: kToolbarHeight,
-                      child: TextButton(
-                        onPressed: () async {
-                          final TransactionModel transaction =
-                              TransactionModel.empty();
-                          transaction.amount =
-                              double.parse(_currencyController.text);
-                          transaction.currencyCode = _currentCurrency;
-                          transaction.category = CategoryModel.empty();
-                          transaction.category!.name = _categoryController.text;
-                          transaction.category!.type = categoryType;
-                          transactionCalculate(transaction);
-                          debugPrint(transaction.toString());
-                          context
-                              .read<CreateTransactionBloc>()
-                              .add(CreateTransaction(transaction: transaction));
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+      child: BlocListener<CreateTransactionBloc, CreateTransactionState>(
+        listener: (context, state) {
+          if (state is CreateTransactionSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Gider başarıyla eklendi!'),
+              ),
+            );
+            Navigator.pop(context);
+          } else if (state is CreateTransactionFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error.toString()),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } else if (state is CreateTransactionInProgress) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Gider ekleniyor...'),
+              ),
+            );
+          }
+        },
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Gider Ekle'),
+              centerTitle: true,
+              backgroundColor: Colors.white,
+            ),
+            body: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: FittedBox(
+                fit: BoxFit.fitWidth,
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      currencyTextFormField(),
+                      const SizedBox(height: 16),
+                      categoryTextFormField(),
+                      const SizedBox(height: 16),
+                      paymentInfo(),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.9,
+                        height: kToolbarHeight,
+                        child: TextButton(
+                          onPressed: () async {
+                            final TransactionModel transaction =
+                                TransactionModel.empty();
+                            transaction.amount =
+                                double.parse(_currencyController.text);
+                            transaction.currencyCode = _currentCurrency;
+                            transaction.category = CategoryModel.empty();
+                            transaction.category!.name =
+                                _categoryController.text;
+                            transaction.category!.type = categoryType;
+                            transactionCalculate(transaction);
+                            debugPrint(transaction.toString());
+                            context.read<CreateTransactionBloc>().add(
+                                CreateTransaction(transaction: transaction));
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            shadowColor: Colors.black,
+                            elevation: 1,
                           ),
-                          shadowColor: Colors.black,
-                          elevation: 1,
-                        ),
-                        child: const Text(
-                          'Gider Ekle',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                          child: const Text(
+                            'Gider Ekle',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

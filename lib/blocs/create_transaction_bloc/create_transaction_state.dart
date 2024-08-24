@@ -5,7 +5,7 @@ sealed class CreateTransactionState {}
 
 final class CreateTransactionInitial extends CreateTransactionState {}
 
-final class CreateTransactionLoading extends CreateTransactionState {}
+final class CreateTransactionInProgress extends CreateTransactionState {}
 
 final class CreateTransactionSuccess extends CreateTransactionState {
   final TransactionModel transaction;

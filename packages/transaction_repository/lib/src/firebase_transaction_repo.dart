@@ -1,12 +1,13 @@
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:transaction_repository/src/models/transaction.dart';
 import 'package:transaction_repository/src/transaction_repo.dart';
 
 class FirebaseTransactionRepository implements TransactionRepository {
-  final transactionCollection =
-      FirebaseFirestore.instance.collection('transactions');
+  final transactionCollection = FirebaseFirestore.instance.collection('transactions');
   @override
   Future<void> createTransaction(TransactionModel transaction) async {
     try {
@@ -30,23 +31,37 @@ class FirebaseTransactionRepository implements TransactionRepository {
   @override
   Future<void> updateTransaction(TransactionModel transaction) async {
     try {
-      await transactionCollection
-          .doc(transaction.id)
-          .update(transaction.toMap());
+      await transactionCollection.doc(transaction.id).update(transaction.toMap());
     } catch (e) {
       log('Transaction update failed: $e');
     }
   }
 
   @override
-  Future<List<TransactionModel>> fetchTransactionsForUser(String userId) {
+  Future<List<TransactionModel>> fetchTransactionsForUser() {
+    return transactionCollection.where('userId', isEqualTo: getCurrenUser()?.uid ?? '').get().then((snapshot) async {
+      debugPrint('snapshot.docs: ${snapshot.docs}');
+      return snapshot.docs.map((doc) => TransactionModel.fromMap(doc.data())).toList();
+    });
+  }
+
+  @override
+  Future<List<TransactionModel>> fetchLastTransactionsForUser() {
     return transactionCollection
-        .where('userId', isEqualTo: userId)
+        .where('userId', isEqualTo: getCurrenUser()?.uid ?? '')
+        .orderBy(
+          'date',
+          descending: true,
+        )
+        .limit(5)
         .get()
         .then((snapshot) async {
-      return snapshot.docs
-          .map((doc) => TransactionModel.fromMap(doc.data()))
-          .toList();
+      debugPrint('snapshot.docs: ${snapshot.docs}');
+      return snapshot.docs.map((doc) => TransactionModel.fromMap(doc.data())).toList();
     });
+  }
+
+  User? getCurrenUser() {
+    return FirebaseAuth.instance.currentUser;
   }
 }

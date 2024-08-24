@@ -1,5 +1,4 @@
-import 'category.dart';
-import 'installment.dart';
+import 'package:transaction_repository/transaction_repository.dart';
 
 class TransactionModel {
   String userId;
@@ -39,18 +38,14 @@ class TransactionModel {
   static TransactionModel fromMap(Map<String, dynamic> json) {
     return TransactionModel(
       userId: json['userId'] as String? ?? '',
-      id: json['id'] as String,
-      title: json['title'] as String,
-      type: json['type'] == 'income'
-          ? TransactionType.income
-          : TransactionType.expense,
-      amount: json['amount'] as double,
-      date: json['date'] as DateTime,
-      currencyCode: json['currencyCode'] as String,
-      category: json['category'] != null
-          ? CategoryModel.fromMap(json['category'] as Map<String, Object>)
-          : null,
-      note: json['note'] as String?,
+      id: json['id'],
+      title: json['title'],
+      type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+      amount: json['amount'],
+      date: (json['date'] as Timestamp).toDate(),
+      currencyCode: json['currencyCode'],
+      category: json['category'] != null ? CategoryModel.fromMap(json['category']) : null,
+      note: json['note'],
     );
   }
 

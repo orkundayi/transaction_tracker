@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
+import 'package:flutter_application/blocs/get_transaction_bloc/get_transaction_bloc.dart';
 import 'package:flutter_application/screens/add_expense/views/add_expense.dart';
 import 'package:flutter_application/screens/home/views/main_screen.dart';
 import 'package:flutter_application/screens/stats/stats_screen.dart';
@@ -18,15 +19,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int index = 0;
-  var pageList = <Widget>[
-    const MainScreen(),
-    const StatsScreen(),
-  ];
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      body: pageList[index],
+      body: BlocProvider.value(
+        value: BlocProvider.of<GetTransactionBloc>(context),
+        child: IndexedStack(
+          index: index,
+          children: const <Widget>[
+            MainScreen(),
+            StatsScreen(),
+          ],
+        ),
+      ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: ClipRRect(

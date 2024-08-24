@@ -5,5 +5,6 @@ abstract class TransactionRepository {
   Future<void> removeTransaction(TransactionModel transaction);
   Future<void> updateTransaction(TransactionModel transaction);
 
-  Future<List<TransactionModel>> fetchTransactionsForUser(String userId);
+  Future<List<TransactionModel>> fetchTransactionsForUser();
+  Future<List<TransactionModel>> fetchLastTransactionsForUser();
 }
