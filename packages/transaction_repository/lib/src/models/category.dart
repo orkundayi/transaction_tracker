@@ -30,23 +30,46 @@ class CategoryModel {
     };
   }
 
-  factory CategoryModel.empty() {
+  factory CategoryModel.empty(CategoryType type) {
     return CategoryModel(
       name: '',
-      type: CategoryType.other,
-      categoryIcon: getCategoryIcon(CategoryType.other),
+      type: type,
+      categoryIcon: getCategoryIcon(type),
     );
   }
+  // Tüm CategoryType enum değerlerini döndüren bir fonksiyon
+  static List<CategoryType> get allCategoryTypes => CategoryType.values.toList();
+
+  // Belirli CategoryType'ları içeren bir liste döndüren fonksiyon
+  static List<CategoryType> get incomeCategoryTypes => [
+        CategoryType.salary,
+        CategoryType.passive,
+        CategoryType.otherIncome,
+      ];
+
+  // Belirli CategoryType'ları içermeyenleri döndüren fonksiyon
+  static List<CategoryType> get expenseCategoryTypes => CategoryType.values.where((type) => !incomeCategoryTypes.contains(type)).toList();
+
+  // Belirli CategoryType'ların sayısını döndüren fonksiyon
+  static int get incomeCategoryTypeCount => incomeCategoryTypes.length;
+
+  // Belirli CategoryType'ların sayısını döndüren fonksiyon
+  static int get expenseCategoryTypeCount => expenseCategoryTypes.length;
 }
 
 enum CategoryType {
+  // Expenses
   electronics, //elektronik
   education, //eğitim
   entertainment, //eylence
   food, //yemek
   health, //sağlık
   transportation, //ulaşım
-  other //diğer
+  otherExpense, //diğer
+  // Incomes
+  salary, //maaş
+  passive, //pasif
+  otherIncome, //diğer
 }
 
 getCategoryName(CategoryType? type) {
@@ -63,7 +86,12 @@ getCategoryName(CategoryType? type) {
       return 'Sağlık';
     case CategoryType.transportation:
       return 'Ulaşım';
-    case CategoryType.other:
+    case CategoryType.salary:
+      return 'Maaş';
+    case CategoryType.passive:
+      return 'Pasif Gelir';
+    case CategoryType.otherExpense:
+    case CategoryType.otherIncome:
     default:
       return 'Diğer';
   }
@@ -83,7 +111,11 @@ getCategoryIcon(CategoryType? type) {
       return const FaIcon(FontAwesomeIcons.heartPulse);
     case CategoryType.transportation:
       return const FaIcon(FontAwesomeIcons.bus);
-    case CategoryType.other:
+    case CategoryType.salary:
+    case CategoryType.passive:
+      return const FaIcon(FontAwesomeIcons.wallet);
+    case CategoryType.otherExpense:
+    case CategoryType.otherIncome:
     default:
       return const FaIcon(FontAwesomeIcons.bars);
   }

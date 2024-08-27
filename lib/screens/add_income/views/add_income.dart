@@ -3,27 +3,26 @@ import 'package:flutter_application/blocs/create_transaction_bloc/create_transac
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart' as intl;
 import 'package:transaction_repository/transaction_repository.dart';
 
-class AddExpense extends StatefulWidget {
-  const AddExpense({super.key});
+class AddIncome extends StatefulWidget {
+  const AddIncome({super.key});
 
   @override
-  State<AddExpense> createState() => _AddExpenseState();
+  State<AddIncome> createState() => _AddIncomeState();
 }
 
-class _AddExpenseState extends State<AddExpense> {
+class _AddIncomeState extends State<AddIncome> {
   String _currentIcon = '₺';
   String _currentCurrency = 'TR';
 
-  bool isInstallment = false;
   DateTime? installmentDate;
   DateTime? paymentDate;
-  CategoryType? categoryType = CategoryType.otherExpense;
+  CategoryType? categoryType = CategoryType.otherIncome;
 
   final TextEditingController _currencyController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController(text: 'Kategori Seçin');
-  final TextEditingController _installmentCountController = TextEditingController();
 
   void _toggleCurrency() async {
     await getCurrencyList();
@@ -39,7 +38,7 @@ class _AddExpenseState extends State<AddExpense> {
           onTap: () => FocusScope.of(context).unfocus(),
           child: Scaffold(
             appBar: AppBar(
-              title: const Text('Gider Ekle'),
+              title: const Text('Gelir Ekle'),
               centerTitle: true,
               backgroundColor: Colors.white,
             ),
@@ -83,7 +82,7 @@ class _AddExpenseState extends State<AddExpense> {
                             elevation: 1,
                           ),
                           child: const Text(
-                            'Gider Ekle',
+                            'Gelir Ekle',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -103,12 +102,8 @@ class _AddExpenseState extends State<AddExpense> {
   }
 
   void transactionCalculate(TransactionModel transaction) {
-    if (isInstallment) {
-      transaction.installments = createInstallments();
-    } else {
-      transaction.date = paymentDate!;
-    }
-    transaction.type = TransactionType.expense;
+    transaction.date = paymentDate!;
+    transaction.type = TransactionType.income;
   }
 
   Future<void> getCurrencyList() async {
@@ -310,10 +305,10 @@ class _AddExpenseState extends State<AddExpense> {
                     Expanded(
                       child: ListView.builder(
                         shrinkWrap: true,
-                        itemCount: CategoryModel.expenseCategoryTypeCount,
+                        itemCount: CategoryModel.incomeCategoryTypeCount,
                         padding: const EdgeInsets.all(8),
                         itemBuilder: (context, index) {
-                          CategoryType categoryType = CategoryModel.expenseCategoryTypes[index];
+                          CategoryType categoryType = CategoryModel.incomeCategoryTypes[index];
                           return ListTile(
                             title: Text(
                               getCategoryName(categoryType),
@@ -415,6 +410,10 @@ class _AddExpenseState extends State<AddExpense> {
     return Stack(
       children: [
         Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 7,
+            vertical: 7,
+          ),
           width: MediaQuery.of(context).size.width * 0.9,
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -427,301 +426,80 @@ class _AddExpenseState extends State<AddExpense> {
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+          child: TextFormField(
+            onTap: () async {
+              final firstDateOfTheMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
+              final lastDateOfTheMonth = DateTime(DateTime.now().year, DateTime.now().month + 1, 0);
+              final date = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: categoryType == CategoryType.otherIncome ? DateTime(DateTime.now().year) : firstDateOfTheMonth,
+                lastDate: categoryType == CategoryType.otherIncome ? DateTime(DateTime.now().year + 100) : lastDateOfTheMonth,
+              );
+              if (date != null) {
+                setState(() {
+                  paymentDate = date;
+                });
+              }
+            },
+            textAlignVertical: TextAlignVertical.center,
+            readOnly: true,
+            decoration: InputDecoration(
+              fillColor: Theme.of(context).scaffoldBackgroundColor,
+              filled: true,
+              prefixIcon: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Stack(
                   children: [
-                    Row(
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                            ),
-                            height: 48,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 20,
-                                  offset: Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                FontAwesomeIcons.creditCard,
-                                size: 20,
-                              ),
-                            ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                      ),
+                      height: 40,
+                      margin: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
                           ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          FontAwesomeIcons.calendarDay,
+                          size: 20,
                         ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Taksit mevcut mu?',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    Switch(
-                      value: isInstallment,
-                      onChanged: (value) {
-                        setState(() {
-                          isInstallment = value;
-                        });
-                      },
+                    const Positioned(
+                      top: 4,
+                      right: 6,
+                      child: Text(
+                        '*',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              if (isInstallment) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                  ),
-                  child: TextFormField(
-                    controller: _installmentCountController,
-                    onChanged: (value) {
-                      _installmentCountController.text = value;
-                    },
-                    textAlignVertical: TextAlignVertical.center,
-                    decoration: InputDecoration(
-                      fillColor: Theme.of(context).scaffoldBackgroundColor,
-                      filled: true,
-                      prefixIcon: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Stack(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                              height: 40,
-                              margin: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 20,
-                                    offset: Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  FontAwesomeIcons.circleQuestion,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            const Positioned(
-                              top: 4,
-                              right: 6,
-                              child: Text(
-                                '*',
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 24,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      hintText: 'Taksit Sayısı',
-                      hintTextDirection: TextDirection.ltr,
-                      border: const OutlineInputBorder(
-                        borderSide: BorderSide.none,
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(24),
-                        ),
-                      ),
-                    ),
-                  ),
+              hintText:
+                  'Gelir Tarihi: ${categoryType == CategoryType.otherIncome ? paymentDate != null ? intl.DateFormat("d MMMM", "tr_TR").format(paymentDate!) : 'Seçin' : paymentDate != null ? 'Ayın ${intl.DateFormat('d', 'tr_TR').format(paymentDate!)}' : 'Seçin'}',
+              hintTextDirection: TextDirection.ltr,
+              border: const OutlineInputBorder(
+                borderSide: BorderSide.none,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(24),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 8,
-                  ),
-                  child: TextFormField(
-                    onTap: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(DateTime.now().year),
-                        lastDate: DateTime(DateTime.now().year + 100),
-                      );
-                      if (date != null) {
-                        setState(() {
-                          installmentDate = date;
-                        });
-                      }
-                    },
-                    textAlignVertical: TextAlignVertical.center,
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      fillColor: Theme.of(context).scaffoldBackgroundColor,
-                      filled: true,
-                      prefixIcon: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Stack(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                              height: 40,
-                              margin: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 20,
-                                    offset: Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  FontAwesomeIcons.calendarDay,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            const Positioned(
-                              top: 4,
-                              right: 6,
-                              child: Text(
-                                '*',
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 24,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      hintText: 'Taksit Ödeme Günü: ${installmentDate?.toLocal().toString().split(' ')[0] ?? 'Seçin'}',
-                      hintTextDirection: TextDirection.ltr,
-                      border: const OutlineInputBorder(
-                        borderSide: BorderSide.none,
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(24),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              if (!isInstallment) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                  ),
-                  child: TextFormField(
-                    onTap: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(DateTime.now().year),
-                        lastDate: DateTime(DateTime.now().year + 100),
-                      );
-                      if (date != null) {
-                        setState(() {
-                          paymentDate = date;
-                        });
-                      }
-                    },
-                    textAlignVertical: TextAlignVertical.center,
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      fillColor: Theme.of(context).scaffoldBackgroundColor,
-                      filled: true,
-                      prefixIcon: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Stack(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                              height: 40,
-                              margin: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 20,
-                                    offset: Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  FontAwesomeIcons.calendarDay,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            const Positioned(
-                              top: 4,
-                              right: 6,
-                              child: Text(
-                                '*',
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 24,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      hintText: 'Ödeme Tarihi: ${paymentDate?.toLocal().toString().split(' ')[0] ?? 'Seçin'}',
-                      hintTextDirection: TextDirection.ltr,
-                      border: const OutlineInputBorder(
-                        borderSide: BorderSide.none,
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(24),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ]
-            ],
+              ),
+            ),
           ),
         ),
         const Positioned.fill(
@@ -729,37 +507,11 @@ class _AddExpenseState extends State<AddExpense> {
             opacity: 0.1,
             child: Icon(
               FontAwesomeIcons.calendarDay,
-              size: 80,
+              size: 40,
             ),
           ),
         ),
       ],
     );
-  }
-
-  List<InstallmentModel>? createInstallments() {
-    CurrencyModel currency = CurrencyModel.empty();
-    currency.currencyCode = _currentCurrency;
-    currency.kod = _currentCurrency;
-    final int? installmentCount = int.tryParse(_installmentCountController.text);
-    if (installmentCount != null && installmentDate != null) {
-      List<InstallmentModel> installments = [];
-      for (int i = 0; i < installmentCount; i++) {
-        installments.add(
-          InstallmentModel(
-            installmentNumber: i + 1,
-            amount: double.parse(_currencyController.text) / installmentCount,
-            dueDate: DateTime(
-              installmentDate!.year,
-              installmentDate!.month + i,
-              installmentDate!.day,
-            ),
-            currency: currency,
-          ),
-        );
-      }
-      return installments;
-    }
-    return null;
   }
 }

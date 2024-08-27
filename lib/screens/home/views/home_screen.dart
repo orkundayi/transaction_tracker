@@ -9,6 +9,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:transaction_repository/transaction_repository.dart';
 
 import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
+import '../../add_income/views/add_income.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -78,14 +79,16 @@ class _HomeScreenState extends State<HomeScreen> {
         animatedIconTheme: const IconThemeData(size: 22.0),
         children: [
           SpeedDialChild(
-            child: const Icon(
-              CupertinoIcons.money_dollar_circle,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
             ),
+            child: const Icon(CupertinoIcons.money_dollar_circle),
             label: 'Gider Ekle',
             backgroundColor: theme.scaffoldBackgroundColor,
             labelBackgroundColor: theme.scaffoldBackgroundColor,
             onTap: () async {
-              await Navigator.of(context).push(
+              await Navigator.of(context)
+                  .push(
                 MaterialPageRoute(
                   builder: (context) => BlocProvider(
                     create: (context) => CreateTransactionBloc(
@@ -94,19 +97,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const AddExpense(),
                   ),
                 ),
-              ).then((_) {
+              )
+                  .then((_) {
                 context.read<GetUserTransactionsBloc>().add(const FetchLastTransactions());
               });
             },
           ),
           SpeedDialChild(
-            child: const Icon(
-              CupertinoIcons.money_dollar_circle_fill,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
             ),
+            child: const Icon(CupertinoIcons.money_dollar_circle_fill),
             label: 'Gelir Ekle',
             backgroundColor: theme.scaffoldBackgroundColor,
             labelBackgroundColor: theme.scaffoldBackgroundColor,
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider(
+                    create: (context) => CreateTransactionBloc(
+                      FirebaseTransactionRepository(),
+                    ),
+                    child: const AddIncome(),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

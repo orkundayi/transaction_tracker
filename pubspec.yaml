@@ -20,9 +20,10 @@ dependencies:
   bloc: ^8.1.4
   flutter_bloc: ^8.1.6
   meta: ^1.12.0
+  flutter_animate: ^4.5.0
+  flutter_speed_dial: ^7.0.0
   transaction_repository:
     path: packages/transaction_repository
-  flutter_speed_dial: ^7.0.0
   
   
 
