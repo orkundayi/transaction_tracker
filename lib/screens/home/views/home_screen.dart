@@ -97,7 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               )
                   .then((_) {
-                context.read<GetUserTransactionsBloc>().add(const FetchLastTransactions());
+                context
+                    .read<GetUserTransactionsBloc>()
+                    .add(const FetchLastTransactions());
               });
             },
           ),
