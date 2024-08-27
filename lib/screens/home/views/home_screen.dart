@@ -85,8 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: theme.scaffoldBackgroundColor,
             labelBackgroundColor: theme.scaffoldBackgroundColor,
             onTap: () async {
-              await Navigator.of(context)
-                  .push(
+              await Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => BlocProvider(
                     create: (context) => CreateTransactionBloc(
@@ -95,11 +94,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const AddExpense(),
                   ),
                 ),
-              )
-                  .then((_) {
-                context
-                    .read<GetUserTransactionsBloc>()
-                    .add(const FetchLastTransactions());
+              ).then((_) {
+                context.read<GetUserTransactionsBloc>().add(const FetchLastTransactions());
               });
             },
           ),
