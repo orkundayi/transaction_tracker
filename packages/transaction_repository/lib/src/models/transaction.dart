@@ -69,3 +69,19 @@ enum TransactionType {
   income,
   expense,
 }
+
+String getTransactionTypeName(TransactionType type) {
+  switch (type) {
+    case TransactionType.income:
+      return 'Gelir';
+    case TransactionType.expense:
+      return 'Gider';
+    default:
+      return '';
+  }
+}
+
+enum TransactionMode {
+  all,
+  last,
+}

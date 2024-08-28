@@ -22,7 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   initState() {
     super.initState();
-    context.read<GetUserTransactionsBloc>().add(const FetchLastTransactions());
+    final transactionsBloc = context.read<GetUserTransactionsBloc>();
+    transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
   }
 
   int index = 0;
@@ -99,7 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               )
                   .then((_) {
-                context.read<GetUserTransactionsBloc>().add(const FetchLastTransactions());
+                final transactionsBloc = context.read<GetUserTransactionsBloc>();
+                transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
               });
             },
           ),

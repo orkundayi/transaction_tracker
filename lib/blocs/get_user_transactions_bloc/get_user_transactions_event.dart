@@ -5,10 +5,18 @@ sealed class GetTransactionEvent {
   const GetTransactionEvent();
 }
 
+class FetchTransactions extends GetTransactionEvent {
+  final TransactionType? type;
+  final TransactionMode? mode;
+  const FetchTransactions(this.type, this.mode);
+}
+
 class FetchAllTransactions extends GetTransactionEvent {
-  const FetchAllTransactions();
+  final TransactionType? type;
+  const FetchAllTransactions(this.type);
 }
 
 class FetchLastTransactions extends GetTransactionEvent {
-  const FetchLastTransactions();
+  final TransactionType? type;
+  const FetchLastTransactions(this.type);
 }

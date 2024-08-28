@@ -5,6 +5,6 @@ abstract class TransactionRepository {
   Future<void> removeTransaction(TransactionModel transaction);
   Future<void> updateTransaction(TransactionModel transaction);
 
-  Future<List<TransactionModel>> fetchTransactionsForUser();
-  Future<List<TransactionModel>> fetchLastTransactionsForUser();
+  Future<List<TransactionModel>> fetchTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate});
+  Future<List<TransactionModel>> fetchLastTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate});
 }

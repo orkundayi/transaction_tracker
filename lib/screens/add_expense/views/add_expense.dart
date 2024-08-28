@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -64,15 +66,21 @@ class _AddExpenseState extends State<AddExpense> {
                         height: kToolbarHeight,
                         child: TextButton(
                           onPressed: () async {
-                            final TransactionModel transaction = TransactionModel.empty();
-                            transaction.amount = double.parse(_currencyController.text);
-                            transaction.currencyCode = _currentCurrency;
-                            transaction.category = CategoryModel.empty(CategoryType.otherExpense);
-                            transaction.category!.name = _categoryController.text;
-                            transaction.category!.type = categoryType;
-                            transactionCalculate(transaction);
-                            debugPrint(transaction.toString());
-                            context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
+                            try {
+                              final TransactionModel transaction = TransactionModel.empty();
+                              transaction.amount = double.parse(_currencyController.text);
+                              transaction.currencyCode = _currentCurrency;
+                              transaction.category = CategoryModel.empty(CategoryType.otherExpense);
+                              transaction.category!.name = _categoryController.text;
+                              transaction.category!.type = categoryType;
+                              transactionCalculate(transaction);
+                              debugPrint(transaction.toString());
+                              context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
+                            } catch (e) {
+                              log(e.toString());
+                            } finally {
+                              Navigator.pop(context);
+                            }
                           },
                           style: TextButton.styleFrom(
                             backgroundColor: Colors.white,

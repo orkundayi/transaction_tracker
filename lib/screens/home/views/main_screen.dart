@@ -2,14 +2,31 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application/screens/transactions/views/all_transactions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:transaction_repository/transaction_repository.dart';
 
 import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  late GetUserTransactionsBloc transactionsBloc;
+
+  @override
+  void initState() {
+    transactionsBloc = context.read<GetUserTransactionsBloc>();
+    transactionsBloc.setTransactionMode(TransactionMode.last);
+    transactionsBloc.setTransactionType(TransactionType.expense);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +35,7 @@ class MainScreen extends StatelessWidget {
     return SafeArea(
       child: RefreshIndicator.adaptive(
         onRefresh: () async {
-          context
-              .read<GetUserTransactionsBloc>()
-              .add(const FetchLastTransactions());
+          transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -205,19 +220,65 @@ class MainScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Recent Transactions',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DropdownButton(
+                            value: context.watch<GetUserTransactionsBloc>().transactionType,
+                            items: const [
+                              DropdownMenuItem(value: TransactionType.income, child: Text('Son Gelirler')),
+                              DropdownMenuItem(value: TransactionType.expense, child: Text('Son Giderler')),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                transactionsBloc.setTransactionType(value);
+                                transactionsBloc.add(FetchLastTransactions(value));
+                              }
+                            },
+                            style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16, fontWeight: FontWeight.bold),
+                            dropdownColor: Theme.of(context).scaffoldBackgroundColor,
+                            icon: Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Icon(
+                                FontAwesomeIcons.caretDown,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                            ),
+                            underline: Container(
+                              color: Colors.transparent,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text(
-                            'See all',
-                            style: TextStyle(
-                              color: Colors.blue,
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => BlocProvider.value(
+                                  value: GetUserTransactionsBloc(FirebaseTransactionRepository()),
+                                  child: const AllTransactions(),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'Hepsini Gör',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                         ),
@@ -226,8 +287,13 @@ class MainScreen extends StatelessWidget {
                     BlocBuilder<GetUserTransactionsBloc, FetchTransactionState>(
                       builder: (context, state) {
                         if (state is FetchingInProgress) {
-                          return const Center(
-                              child: CircularProgressIndicator());
+                          return const SizedBox(
+                            height: 120,
+                            width: 120,
+                            child: Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
                         } else if (state is FetchingSuccess) {
                           final transactions = state.transactions;
                           return ListView.builder(
@@ -237,8 +303,7 @@ class MainScreen extends StatelessWidget {
                             itemBuilder: (context, index) {
                               final transaction = transactions[index];
                               return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
                                 child: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
@@ -250,14 +315,10 @@ class MainScreen extends StatelessWidget {
                                       Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: transaction.type ==
-                                                  TransactionType.income
-                                              ? Colors.green.withOpacity(0.2)
-                                              : Colors.red.withOpacity(0.2),
+                                          color: transaction.type == TransactionType.income ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
                                           shape: BoxShape.circle,
                                         ),
-                                        child: getCategoryIcon(
-                                            transaction.category?.type),
+                                        child: getCategoryIcon(transaction.category?.type),
                                       ),
                                       const SizedBox(width: 10),
                                       Text(
@@ -278,8 +339,7 @@ class MainScreen extends StatelessWidget {
                                             ),
                                           ),
                                           Text(
-                                            DateFormat('dd MMM yyyy')
-                                                .format(transaction.date),
+                                            DateFormat('dd MMM yyyy').format(transaction.date),
                                             style: const TextStyle(
                                               fontSize: 12,
                                               color: Colors.grey,
@@ -295,11 +355,15 @@ class MainScreen extends StatelessWidget {
                             },
                           );
                         } else if (state is TransactionFetchError) {
-                          return Center(
-                              child: Text(
-                                  'Veriler yüklenirken hata oluştu: ${state.error}'));
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 32.0, left: 8, right: 8),
+                            child: Center(child: Text('Veriler yüklenirken hata oluştu: ${state.error}')),
+                          );
                         } else {
-                          return const Center(child: Text('Veri yok.'));
+                          return const Padding(
+                            padding: EdgeInsets.only(top: 32.0, left: 8, right: 8),
+                            child: Center(child: Text('Veri yok.')),
+                          );
                         }
                       },
                     )

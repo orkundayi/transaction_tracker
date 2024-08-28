@@ -38,17 +38,30 @@ class FirebaseTransactionRepository implements TransactionRepository {
   }
 
   @override
-  Future<List<TransactionModel>> fetchTransactionsForUser() {
-    return transactionCollection.where('userId', isEqualTo: getCurrenUser()?.uid ?? '').get().then((snapshot) async {
+  Future<List<TransactionModel>> fetchTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate}) {
+    return transactionCollection
+        .where('userId', isEqualTo: getCurrenUser()?.uid ?? '')
+        .where('type', isEqualTo: type.name)
+        .where('date', isGreaterThanOrEqualTo: firstDate != null ? Timestamp.fromDate(firstDate) : null)
+        .where('date', isLessThanOrEqualTo: lastDate != null ? Timestamp.fromDate(lastDate) : null)
+        .orderBy(
+          'date',
+          descending: true,
+        )
+        .get()
+        .then((snapshot) async {
       debugPrint('snapshot.docs: ${snapshot.docs}');
       return snapshot.docs.map((doc) => TransactionModel.fromMap(doc.data())).toList();
     });
   }
 
   @override
-  Future<List<TransactionModel>> fetchLastTransactionsForUser() {
+  Future<List<TransactionModel>> fetchLastTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate}) {
     return transactionCollection
         .where('userId', isEqualTo: getCurrenUser()?.uid ?? '')
+        .where('type', isEqualTo: type.name)
+        .where('date', isGreaterThanOrEqualTo: firstDate != null ? Timestamp.fromDate(firstDate) : null)
+        .where('date', isLessThanOrEqualTo: lastDate != null ? Timestamp.fromDate(lastDate) : null)
         .orderBy(
           'date',
           descending: true,
