@@ -1,5 +1,5 @@
 import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
+import 'package:flutter/material.dart';
 import 'package:transaction_repository/transaction_repository.dart';
 
 part 'get_user_transactions_event.dart';
@@ -63,11 +63,11 @@ class GetUserTransactionsBloc extends Bloc<GetTransactionEvent, FetchTransaction
       try {
         switch (_transactionMode) {
           case TransactionMode.all:
-            final transactions = await transactionRepository.fetchTransactionsForUser(_transactionType);
+            final transactions = await transactionRepository.fetchTransactionsForUser(_transactionType, firstDate: event.dateRange?.start, lastDate: event.dateRange?.end);
             emit(FetchingSuccess(transactions));
             break;
           case TransactionMode.last:
-            final transactions = await transactionRepository.fetchLastTransactionsForUser(_transactionType);
+            final transactions = await transactionRepository.fetchLastTransactionsForUser(_transactionType, firstDate: event.dateRange?.start, lastDate: event.dateRange?.end);
             emit(FetchingSuccess(transactions));
           default:
         }

@@ -8,7 +8,8 @@ sealed class GetTransactionEvent {
 class FetchTransactions extends GetTransactionEvent {
   final TransactionType? type;
   final TransactionMode? mode;
-  const FetchTransactions(this.type, this.mode);
+  final DateTimeRange? dateRange;
+  const FetchTransactions(this.type, this.mode, this.dateRange);
 }
 
 class FetchAllTransactions extends GetTransactionEvent {
