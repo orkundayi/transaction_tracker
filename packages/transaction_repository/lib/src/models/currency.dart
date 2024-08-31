@@ -2,13 +2,13 @@
 import 'package:xml/xml.dart' as xml;
 
 class CurrencyModel {
-  String kod;
-  String currencyCode;
-  int unit;
-  String name;
-  String currencyName;
-  double forexBuying;
-  double forexSelling;
+  String? kod;
+  String? currencyCode;
+  int? unit;
+  String? name;
+  String? currencyName;
+  double? forexBuying;
+  double? forexSelling;
   double? banknoteBuying;
   double? banknoteSelling;
   double? crossRateUSD;
@@ -16,13 +16,13 @@ class CurrencyModel {
   int orderNo;
 
   CurrencyModel({
-    required this.kod,
-    required this.currencyCode,
-    required this.unit,
-    required this.name,
-    required this.currencyName,
-    required this.forexBuying,
-    required this.forexSelling,
+    this.kod,
+    this.currencyCode,
+    this.unit,
+    this.name,
+    this.currencyName,
+    this.forexBuying,
+    this.forexSelling,
     this.banknoteBuying,
     this.banknoteSelling,
     this.crossRateUSD,
@@ -37,24 +37,14 @@ class CurrencyModel {
       unit: int.tryParse(element.findElements('Unit').single.text) ?? 0,
       name: element.findElements('Isim').single.text,
       currencyName: element.findElements('CurrencyName').single.text,
-      forexBuying:
-          double.tryParse(element.findElements('ForexBuying').single.text) ??
-              0.0,
-      forexSelling:
-          double.tryParse(element.findElements('ForexSelling').single.text) ??
-              0.0,
-      banknoteBuying: element.findElements('BanknoteBuying').isNotEmpty
-          ? double.tryParse(element.findElements('BanknoteBuying').single.text)
-          : null,
-      banknoteSelling: element.findElements('BanknoteSelling').isNotEmpty
-          ? double.tryParse(element.findElements('BanknoteSelling').single.text)
-          : null,
-      crossRateUSD: element.findElements('CrossRateUSD').isNotEmpty &&
-              element.findElements('CrossRateUSD').single.text.isNotEmpty
+      forexBuying: double.tryParse(element.findElements('ForexBuying').single.text) ?? 0.0,
+      forexSelling: double.tryParse(element.findElements('ForexSelling').single.text) ?? 0.0,
+      banknoteBuying: element.findElements('BanknoteBuying').isNotEmpty ? double.tryParse(element.findElements('BanknoteBuying').single.text) : null,
+      banknoteSelling: element.findElements('BanknoteSelling').isNotEmpty ? double.tryParse(element.findElements('BanknoteSelling').single.text) : null,
+      crossRateUSD: element.findElements('CrossRateUSD').isNotEmpty && element.findElements('CrossRateUSD').single.text.isNotEmpty
           ? double.tryParse(element.findElements('CrossRateUSD').single.text)
           : null,
-      crossRateOther: element.findElements('CrossRateOther').isNotEmpty &&
-              element.findElements('CrossRateOther').single.text.isNotEmpty
+      crossRateOther: element.findElements('CrossRateOther').isNotEmpty && element.findElements('CrossRateOther').single.text.isNotEmpty
           ? double.tryParse(element.findElements('CrossRateOther').single.text)
           : null,
     );
@@ -62,17 +52,17 @@ class CurrencyModel {
 
   factory CurrencyModel.fromMap(Map<String, dynamic> map) {
     return CurrencyModel(
-      kod: map['kod'] as String,
-      currencyCode: map['currencyCode'] as String,
-      unit: map['unit'] as int,
-      name: map['name'] as String,
-      currencyName: map['currencyName'] as String,
-      forexBuying: map['forexBuying'] as double,
-      forexSelling: map['forexSelling'] as double,
-      banknoteBuying: map['banknoteBuying'] as double?,
-      banknoteSelling: map['banknoteSelling'] as double?,
-      crossRateUSD: map['crossRateUSD'] as double?,
-      crossRateOther: map['crossRateOther'] as double?,
+      kod: map['kod'],
+      currencyCode: map['currencyCode'],
+      unit: map['unit'],
+      name: map['name'],
+      currencyName: map['currencyName'],
+      forexBuying: map['forexBuying'],
+      forexSelling: map['forexSelling'],
+      banknoteBuying: map['banknoteBuying'],
+      banknoteSelling: map['banknoteSelling'],
+      crossRateUSD: map['crossRateUSD'],
+      crossRateOther: map['crossRateOther'],
     );
   }
 
@@ -95,7 +85,7 @@ class CurrencyModel {
   }
 }
 
-Future<CurrencyRates> parseCurrencyFromResponse(String xmlString) async {
+CurrencyRates parseCurrencyFromResponse(String xmlString) {
   final xmlDocument = xml.XmlDocument.parse(xmlString);
   var currencyRates = CurrencyRates.fromXml(xmlDocument);
   currencyRates.currencies.add(CurrencyModel(
@@ -107,8 +97,7 @@ Future<CurrencyRates> parseCurrencyFromResponse(String xmlString) async {
     forexBuying: 1.0,
     forexSelling: 1.0,
   ));
-  currencyRates.currencies
-      .removeWhere((element) => element.currencyCode == 'XDR');
+  currencyRates.currencies.removeWhere((element) => element.currencyCode == 'XDR');
   for (var currency in currencyRates.currencies) {
     switch (currency.currencyCode) {
       case 'DKK':
@@ -195,8 +184,7 @@ class CurrencyRates {
 
   factory CurrencyRates.fromXml(xml.XmlDocument xmlDocument) {
     final rootElement = xmlDocument.getElement('Tarih_Date')!;
-    final currencies =
-        rootElement.findElements('Currency').map((currencyElement) {
+    final currencies = rootElement.findElements('Currency').map((currencyElement) {
       return CurrencyModel.fromXml(currencyElement);
     }).toList();
     return CurrencyRates(

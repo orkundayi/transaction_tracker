@@ -73,13 +73,17 @@ class _AddExpenseState extends State<AddExpense> {
                               transaction.category = CategoryModel.empty(CategoryType.otherExpense);
                               transaction.category!.name = _categoryController.text;
                               transaction.category!.type = categoryType;
-                              transactionCalculate(transaction);
+                              await transactionCalculate(transaction);
                               debugPrint(transaction.toString());
-                              context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
+                              if (context.mounted) {
+                                context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
+                              }
                             } catch (e) {
                               log(e.toString());
                             } finally {
-                              Navigator.pop(context);
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                              }
                             }
                           },
                           style: TextButton.styleFrom(
@@ -110,9 +114,9 @@ class _AddExpenseState extends State<AddExpense> {
     );
   }
 
-  void transactionCalculate(TransactionModel transaction) {
+  Future<void> transactionCalculate(TransactionModel transaction) async {
     if (isInstallment) {
-      transaction.installments = createInstallments();
+      transaction.installments = await createInstallments();
     } else {
       transaction.date = paymentDate!;
     }
@@ -120,10 +124,10 @@ class _AddExpenseState extends State<AddExpense> {
   }
 
   Future<void> getCurrencyList() async {
-    final response = await http.get(Uri.parse('https://www.tcmb.gov.tr/kurlar/today.xml'));
+    http.Response response = await getCurrencies();
 
     if (response.statusCode == 200) {
-      var currencies = await parseCurrencyFromResponse(response.body);
+      var currencies = parseCurrencyFromResponse(response.body);
       currencies.currencies.sort((a, b) => a.orderNo.compareTo(b.orderNo));
       if (mounted) {
         showModalBottomSheet(
@@ -153,14 +157,14 @@ class _AddExpenseState extends State<AddExpense> {
                         var currency = currencies.currencies[index];
                         return ListTile(
                           title: Text(
-                            currency.name,
+                            currency.name ?? '',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           trailing: Text(
-                            getCurrencySymbolFromCurrencyCode(currency.currencyCode),
+                            getCurrencySymbolFromCurrencyCode(currency.currencyCode ?? ''),
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -168,9 +172,9 @@ class _AddExpenseState extends State<AddExpense> {
                           ),
                           onTap: () {
                             _currentIcon = getCurrencySymbolFromCurrencyCode(
-                              currency.currencyCode,
+                              currency.currencyCode ?? '',
                             );
-                            _currentCurrency = currency.currencyCode;
+                            _currentCurrency = currency.currencyCode ?? '';
                             debugPrint(
                               'Currency: $_currentCurrency, Icon: $_currentIcon',
                             );
@@ -745,10 +749,15 @@ class _AddExpenseState extends State<AddExpense> {
     );
   }
 
-  List<InstallmentModel>? createInstallments() {
+  Future<List<InstallmentModel>?> createInstallments() async {
     CurrencyModel currency = CurrencyModel.empty();
     currency.currencyCode = _currentCurrency;
     currency.kod = _currentCurrency;
+
+    final selectedCurrency = await getCurrencies().then((value) async {
+      final currencies = parseCurrencyFromResponse(value.body);
+      return currencies.currencies.firstWhere((c) => c.currencyCode == _currentCurrency, orElse: () => currency);
+    });
     final int? installmentCount = int.tryParse(_installmentCountController.text);
     if (installmentCount != null && installmentDate != null) {
       List<InstallmentModel> installments = [];
@@ -762,6 +771,10 @@ class _AddExpenseState extends State<AddExpense> {
               installmentDate!.month + i,
               installmentDate!.day,
             ),
+            calculatedAmount: calculateRelateToCurrency(
+              double.parse(_currencyController.text) / installmentCount,
+              selectedCurrency,
+            ),
             currency: currency,
           ),
         );
@@ -770,4 +783,16 @@ class _AddExpenseState extends State<AddExpense> {
     }
     return null;
   }
+
+  double calculateRelateToCurrency(double amount, CurrencyModel selectedCurrency) {
+    if (selectedCurrency.currencyCode != 'TR' && selectedCurrency.forexBuying != null) {
+      return amount * selectedCurrency.forexBuying!;
+    }
+    return 0.0;
+  }
+}
+
+Future<http.Response> getCurrencies() async {
+  final response = await http.get(Uri.parse('https://www.tcmb.gov.tr/kurlar/today.xml'));
+  return response;
 }

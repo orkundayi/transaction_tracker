@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart' as intl;
 import 'package:transaction_repository/transaction_repository.dart';
+
+import '../../add_expense/views/add_expense.dart';
 
 class AddIncome extends StatefulWidget {
   const AddIncome({super.key});
@@ -72,13 +75,17 @@ class _AddIncomeState extends State<AddIncome> {
                               transaction.category = CategoryModel.empty(CategoryType.otherExpense);
                               transaction.category!.name = _categoryController.text;
                               transaction.category!.type = categoryType;
-                              transactionCalculate(transaction);
+                              await transactionCalculate(transaction);
                               debugPrint(transaction.toString());
-                              context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
+                              if (context.mounted) {
+                                context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
+                              }
                             } catch (e) {
                               log(e.toString());
                             } finally {
-                              Navigator.pop(context);
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                              }
                             }
                           },
                           style: TextButton.styleFrom(
@@ -109,16 +116,26 @@ class _AddIncomeState extends State<AddIncome> {
     );
   }
 
-  void transactionCalculate(TransactionModel transaction) {
+  Future<void> transactionCalculate(TransactionModel transaction) async {
+    CurrencyModel currency = CurrencyModel.empty();
+    currency.currencyCode = _currentCurrency;
+    currency.kod = _currentCurrency;
     transaction.date = paymentDate!;
     transaction.type = TransactionType.income;
+    final selectedCurrency = await getCurrencies().then((value) async {
+      final currencies = parseCurrencyFromResponse(value.body);
+      return currencies.currencies.firstWhere((c) => c.currencyCode == _currentCurrency, orElse: () => currency);
+    });
+    if (selectedCurrency.currencyCode != 'TR' && selectedCurrency.forexBuying != null) {
+      transaction.calculatedAmount = transaction.amount * selectedCurrency.forexBuying!;
+    }
   }
 
   Future<void> getCurrencyList() async {
     final response = await http.get(Uri.parse('https://www.tcmb.gov.tr/kurlar/today.xml'));
 
     if (response.statusCode == 200) {
-      var currencies = await parseCurrencyFromResponse(response.body);
+      var currencies = parseCurrencyFromResponse(response.body);
       currencies.currencies.sort((a, b) => a.orderNo.compareTo(b.orderNo));
       if (mounted) {
         showModalBottomSheet(
@@ -148,14 +165,14 @@ class _AddIncomeState extends State<AddIncome> {
                         var currency = currencies.currencies[index];
                         return ListTile(
                           title: Text(
-                            currency.name,
+                            currency.name ?? '',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           trailing: Text(
-                            getCurrencySymbolFromCurrencyCode(currency.currencyCode),
+                            getCurrencySymbolFromCurrencyCode(currency.currencyCode ?? ''),
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -163,9 +180,9 @@ class _AddIncomeState extends State<AddIncome> {
                           ),
                           onTap: () {
                             _currentIcon = getCurrencySymbolFromCurrencyCode(
-                              currency.currencyCode,
+                              currency.currencyCode ?? '',
                             );
-                            _currentCurrency = currency.currencyCode;
+                            _currentCurrency = currency.currencyCode ?? '';
                             debugPrint(
                               'Currency: $_currentCurrency, Icon: $_currentIcon',
                             );

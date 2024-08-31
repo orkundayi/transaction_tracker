@@ -32,6 +32,16 @@ class GetUserTransactionsBloc extends Bloc<GetTransactionEvent, FetchTransaction
   }
 
   GetUserTransactionsBloc(this.transactionRepository) : super(FetchTransactionInitial()) {
+    on<FetchTotalTransaction>((event, emit) async {
+      emit(FetchingInProgress());
+      try {
+        final transactions = await transactionRepository.fetchTransactionsForThisMonth();
+        emit(FetchingSuccess(transactions));
+      } catch (e) {
+        emit(TransactionFetchError(e));
+      }
+    });
+
     on<FetchAllTransactions>((event, emit) async {
       emit(FetchingInProgress());
       _transactionMode = TransactionMode.all;

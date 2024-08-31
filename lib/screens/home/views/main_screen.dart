@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/screens/transactions/views/all_transactions.dart';
@@ -9,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:transaction_repository/transaction_repository.dart';
 
 import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
+import 'total_balance_card.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -30,7 +29,6 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     return SafeArea(
       child: RefreshIndicator.adaptive(
@@ -101,118 +99,9 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    height: 200,
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.secondary,
-                          theme.colorScheme.tertiary,
-                        ],
-                        transform: const GradientRotation(pi / 4),
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Total Balance',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const Text(
-                          '\$ 1,000,000',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Icon(
-                                    CupertinoIcons.arrow_down,
-                                    color: Color(0xff45de52),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                const Column(
-                                  children: [
-                                    Text(
-                                      'Income',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    Text(
-                                      '500,000',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Icon(
-                                    CupertinoIcons.arrow_up,
-                                    color: Color(0xfffb5e69),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                const Column(
-                                  children: [
-                                    Text(
-                                      'Expenses',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    Text(
-                                      '500,000',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                BlocProvider.value(
+                  value: GetUserTransactionsBloc(FirebaseTransactionRepository()),
+                  child: const TotalBalanceCard(),
                 ),
                 const SizedBox(height: 10),
                 Column(
@@ -296,6 +185,21 @@ class _MainScreenState extends State<MainScreen> {
                           );
                         } else if (state is FetchingSuccess) {
                           final transactions = state.transactions;
+                          if (transactions.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.only(top: 32.0, left: 8, right: 8),
+                              child: Center(
+                                child: Text(
+                                  'İşlem Bulunamadı',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
                           return ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),

@@ -7,4 +7,5 @@ abstract class TransactionRepository {
 
   Future<List<TransactionModel>> fetchTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate});
   Future<List<TransactionModel>> fetchLastTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate});
+  Future<List<TransactionModel>> fetchTransactionsForThisMonth();
 }

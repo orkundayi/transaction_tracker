@@ -74,6 +74,26 @@ class FirebaseTransactionRepository implements TransactionRepository {
     });
   }
 
+  @override
+  Future<List<TransactionModel>> fetchTransactionsForThisMonth() {
+    final todayLocal = DateTime.now().toLocal();
+    final firstDateOfThisMonth = DateTime(todayLocal.year, todayLocal.month, 1);
+    final lastDateOfThisMonth = DateTime(todayLocal.year, todayLocal.month + 1, 0, 23, 59, 59);
+    return transactionCollection
+        .where('userId', isEqualTo: getCurrenUser()?.uid ?? '')
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(firstDateOfThisMonth))
+        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(lastDateOfThisMonth))
+        .orderBy(
+          'date',
+          descending: true,
+        )
+        .get()
+        .then((snapshot) async {
+      debugPrint('snapshot.docs: ${snapshot.docs}');
+      return snapshot.docs.map((doc) => TransactionModel.fromMap(doc.data())).toList();
+    });
+  }
+
   User? getCurrenUser() {
     return FirebaseAuth.instance.currentUser;
   }

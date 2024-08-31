@@ -120,14 +120,15 @@ class _AllTransactionsState extends State<AllTransactions> {
                       child: Padding(
                         padding: EdgeInsets.only(top: 32.0, left: 8, right: 8),
                         child: Center(
-                            child: Text(
-                          'İşlem Bulunamadı',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          child: Text(
+                            'İşlem Bulunamadı',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        )),
+                        ),
                       ),
                     );
                   }

@@ -6,6 +6,7 @@ class TransactionModel {
   String? title;
   TransactionType type;
   double amount;
+  double? calculatedAmount;
   DateTime date;
   List<InstallmentModel>? installments;
   String currencyCode;
@@ -18,6 +19,7 @@ class TransactionModel {
     this.title,
     required this.type,
     required this.amount,
+    this.calculatedAmount = 0.0,
     required this.date,
     required this.currencyCode,
     this.category,
@@ -30,6 +32,7 @@ class TransactionModel {
       userId: '',
       type: TransactionType.expense,
       amount: 0.0,
+      calculatedAmount: 0.0,
       date: DateTime.now(),
       currencyCode: '',
     );
@@ -42,10 +45,12 @@ class TransactionModel {
       title: json['title'],
       type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
       amount: json['amount'],
+      calculatedAmount: json['calculatedAmount'],
       date: (json['date'] as Timestamp).toDate(),
       currencyCode: json['currencyCode'],
       category: json['category'] != null ? CategoryModel.fromMap(json['category']) : null,
       note: json['note'],
+      installments: json['installments'] != null ? (json['installments'] as List).map((e) => InstallmentModel.fromMap(e)).toList() : null,
     );
   }
 
@@ -56,6 +61,7 @@ class TransactionModel {
       'title': title,
       'type': type == TransactionType.income ? 'income' : 'expense',
       'amount': amount,
+      'calculatedAmount': calculatedAmount,
       'date': date,
       'currencyCode': currencyCode,
       'category': category?.toMap(category),

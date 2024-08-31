@@ -102,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   .then((_) {
                 final transactionsBloc = context.read<GetUserTransactionsBloc>();
                 transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+                transactionsBloc.add(FetchTotalTransaction());
               });
             },
           ),
@@ -113,8 +114,9 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Gelir Ekle',
             backgroundColor: theme.scaffoldBackgroundColor,
             labelBackgroundColor: theme.scaffoldBackgroundColor,
-            onTap: () {
-              Navigator.of(context).push(
+            onTap: () async {
+              await Navigator.of(context)
+                  .push(
                 MaterialPageRoute(
                   builder: (context) => BlocProvider(
                     create: (context) => CreateTransactionBloc(
@@ -123,7 +125,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const AddIncome(),
                   ),
                 ),
-              );
+              )
+                  .then((_) {
+                final transactionsBloc = context.read<GetUserTransactionsBloc>();
+                transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+                transactionsBloc.add(FetchTotalTransaction());
+              });
             },
           ),
         ],
