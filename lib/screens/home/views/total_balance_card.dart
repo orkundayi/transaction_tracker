@@ -1,12 +1,12 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:math' as math;
 
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application/blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:transaction_repository/transaction_repository.dart';
-
-import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
 
 class TotalBalanceCard extends StatefulWidget {
   const TotalBalanceCard({super.key});
@@ -16,8 +16,12 @@ class TotalBalanceCard extends StatefulWidget {
 }
 
 class _TotalBalanceCardState extends State<TotalBalanceCard> {
+  final CarouselSliderController _carouselSliderController = CarouselSliderController();
+  bool _privateWidgetVisible = false;
+  int _currentIndex = 0;
+
   bool _loadedOnce = false;
-  late GetUserTransactionsBloc transactionsBloc;
+  late GetAllTransactionBloc transactionsBloc;
   late Timer _timer;
   double _lastTotalBalance = 0.0;
   double _lastIncome = 0.0;
@@ -25,7 +29,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
 
   @override
   void initState() {
-    transactionsBloc = context.read<GetUserTransactionsBloc>();
+    transactionsBloc = context.read<GetAllTransactionBloc>();
     calculateTotalBalance();
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       calculateTotalBalance();
@@ -39,60 +43,150 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
     super.dispose();
   }
 
-  calculateTotalBalance() {
-    transactionsBloc.add(FetchTotalTransaction());
+  void setVisibleWidget() {
+    setState(() {
+      _privateWidgetVisible = !_privateWidgetVisible;
+    });
+  }
+
+  void calculateTotalBalance() {
+    transactionsBloc.add(FetchAllTransactions());
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return BlocBuilder<GetUserTransactionsBloc, FetchTransactionState>(
-      builder: (context, state) {
-        if (state is FetchingInProgress) {
-          if (!_loadedOnce) {
-            return const SizedBox(
+    return BlocListener<GetAllTransactionBloc, GetAllTransactionState>(
+      listener: (context, state) {
+        if (state is FetchingSuccess) {
+          final transactions = state.transactions;
+          final incomes = transactions.where((t) => t.type == TransactionType.income).toList();
+          final expenses = transactions.where((t) => t.type == TransactionType.expense).toList();
+          _lastIncome = incomes.fold(0,
+              (value, transaction) => value + ((transaction.calculatedAmount != null && transaction.calculatedAmount != 0.0) ? transaction.calculatedAmount! : transaction.amount));
+          _lastExpense = expenses.fold(0, (value, transaction) => value + checkIfExpenseHasInstallments(transaction));
+          _lastIncome = double.parse(_lastIncome.toStringAsFixed(2));
+          _lastExpense = double.parse(_lastExpense.toStringAsFixed(2));
+          _lastTotalBalance = _lastIncome - _lastExpense;
+          setState(() {
+            _loadedOnce = true;
+          });
+        } else if (state is TransactionFetchError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Veriler yüklenirken hata oluştu: ${state.error}')),
+          );
+        }
+      },
+      child: _loadedOnce
+          ? GestureDetector(
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity! > 0 && !_privateWidgetVisible && _currentIndex == 0) {
+                  setVisibleWidget();
+                } else if (details.primaryVelocity! < 0 && _privateWidgetVisible && _currentIndex == 0) {
+                  setVisibleWidget();
+                }
+              },
+              child: Stack(
+                children: [
+                  SizedBox(
+                    height: 200,
+                    width: MediaQuery.of(context).size.width,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 200),
+                          height: 184,
+                          width: 160,
+                          left: _privateWidgetVisible ? 20 : -200,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Container(
+                              height: 184,
+                              width: 160,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: theme.colorScheme.primary,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    spreadRadius: 1,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Text(
+                                  'Gizli Widget',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 200),
+                          height: 200,
+                          width: MediaQuery.of(context).size.width,
+                          left: _privateWidgetVisible ? 180 : 0,
+                          child: CarouselSlider(
+                            options: CarouselOptions(
+                              viewportFraction: 0.85,
+                              onPageChanged: (index, reason) {
+                                setState(() {
+                                  _currentIndex = index;
+                                });
+                              },
+                              height: 200,
+                              enableInfiniteScroll: false,
+                              initialPage: 0,
+                              scrollPhysics: _privateWidgetVisible ? const NeverScrollableScrollPhysics() : const AlwaysScrollableScrollPhysics(),
+                            ),
+                            carouselController: _carouselSliderController,
+                            items: [
+                              GestureDetector(
+                                onHorizontalDragEnd: (details) {
+                                  if (details.primaryVelocity! > 0 && !_privateWidgetVisible && _currentIndex == 0) {
+                                    setVisibleWidget();
+                                  } else if (details.primaryVelocity! < 0 && _privateWidgetVisible && _currentIndex == 0) {
+                                    setVisibleWidget();
+                                  } else if (details.primaryVelocity! < 0 && !_privateWidgetVisible && _currentIndex == 0) {
+                                    _carouselSliderController.nextPage(duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+                                  }
+                                },
+                                child: TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense),
+                              ),
+                              TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense),
+                              TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense),
+                              TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 200),
+                    left: _privateWidgetVisible ? 186 : 6 - (_currentIndex * 400),
+                    top: 90,
+                    bottom: 110,
+                    child: const Icon(
+                      CupertinoIcons.pause,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : const SizedBox(
               height: 120,
               width: 120,
               child: Center(
                 child: CircularProgressIndicator(),
               ),
-            );
-          }
-          return TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense);
-        } else if (state is FetchingSuccess) {
-          _loadedOnce = true;
-          late double totalBalance;
-          late double income;
-          late double expense;
-          final transactions = state.transactions;
-
-          if (transactions.isEmpty) {
-            totalBalance = 0.0;
-            income = 0.0;
-            expense = 0.0;
-          } else {
-            final incomes = transactions.where((t) => t.type == TransactionType.income).toList();
-            final expenses = transactions.where((t) => t.type == TransactionType.expense).toList();
-            income = incomes.fold(0, (value, transaction) => value + transaction.amount);
-            expense = expenses.fold(0, (value, transaction) => value + checkIfExpenseHasInstallments(transaction));
-            totalBalance = income - expense;
-          }
-          _lastTotalBalance = totalBalance;
-          _lastIncome = income;
-          _lastExpense = expense;
-          return TotalBalance(theme: theme, totalBalance: totalBalance, income: income, expense: expense);
-        } else if (state is TransactionFetchError) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 32.0, left: 8, right: 8),
-            child: Center(child: Text('Veriler yüklenirken hata oluştu: ${state.error}')),
-          );
-        } else {
-          return const Padding(
-            padding: EdgeInsets.only(top: 32.0, left: 8, right: 8),
-            child: Center(child: Text('Veri yok.')),
-          );
-        }
-      },
+            ),
     );
   }
 
@@ -100,7 +194,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
     if (transaction.installments != null) {
       return findInstallMentForThisMonth(transaction);
     } else {
-      return transaction.amount;
+      return (transaction.calculatedAmount != null && transaction.calculatedAmount != 0.0) ? transaction.calculatedAmount! : transaction.amount;
     }
   }
 
@@ -108,7 +202,8 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
     final now = DateTime.now().toLocal();
     final currentMonth = now.month;
     final currentYear = now.year;
-    return transaction.installments!.firstWhere((i) => i.dueDate.month == currentMonth && i.dueDate.year == currentYear, orElse: () => InstallmentModel.empty()).amount;
+    final installment = transaction.installments!.firstWhere((i) => i.dueDate.month == currentMonth && i.dueDate.year == currentYear, orElse: () => InstallmentModel.empty());
+    return installment.calculatedAmount != 0.0 ? installment.calculatedAmount : installment.amount;
   }
 }
 
@@ -128,116 +223,119 @@ class TotalBalance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        height: 200,
-        width: MediaQuery.of(context).size.width,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.secondary,
-              theme.colorScheme.tertiary,
-            ],
-            transform: const GradientRotation(pi / 4),
-          ),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Toplam Bakiye',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-            Text(
-              '₺ $totalBalance',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.arrow_down,
-                        color: Color(0xff45de52),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      children: [
-                        const Text(
-                          'Gelirler',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          '$income',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.arrow_up,
-                        color: Color(0xfffb5e69),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      children: [
-                        const Text(
-                          'Giderler',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          '$expense',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                )
+    return Padding(
+      padding: const EdgeInsets.all(4),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          height: 200,
+          width: MediaQuery.of(context).size.width - 40,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                theme.colorScheme.primary,
+                theme.colorScheme.secondary,
+                theme.colorScheme.tertiary,
               ],
+              transform: const GradientRotation(math.pi / 4),
             ),
-          ],
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Toplam Bakiye',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                '₺ $totalBalance',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          CupertinoIcons.arrow_down,
+                          color: Color(0xff45de52),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        children: [
+                          const Text(
+                            'Gelirler',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            '$income',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          CupertinoIcons.arrow_up,
+                          color: Color(0xfffb5e69),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        children: [
+                          const Text(
+                            'Giderler',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            '$expense',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

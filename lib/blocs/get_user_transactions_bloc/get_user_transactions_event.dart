@@ -12,14 +12,12 @@ class FetchTransactions extends GetTransactionEvent {
   const FetchTransactions(this.type, this.mode, this.dateRange);
 }
 
-class FetchAllTransactions extends GetTransactionEvent {
+class FetchUserTransactions extends GetTransactionEvent {
   final TransactionType? type;
-  const FetchAllTransactions(this.type);
+  const FetchUserTransactions(this.type);
 }
 
 class FetchLastTransactions extends GetTransactionEvent {
   final TransactionType? type;
   const FetchLastTransactions(this.type);
 }
-
-class FetchTotalTransaction extends GetTransactionEvent {}

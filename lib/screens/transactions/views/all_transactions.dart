@@ -247,7 +247,7 @@ class _AllTransactionsState extends State<AllTransactions> {
         onChanged: (value) {
           if (value != null) {
             transactionsBloc.setTransactionType(value);
-            transactionsBloc.add(FetchAllTransactions(value));
+            transactionsBloc.add(FetchUserTransactions(value));
           }
         },
         style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16, fontWeight: FontWeight.bold),

@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:transaction_repository/transaction_repository.dart';
 
+import '../../../blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
 import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
 import '../../add_income/views/add_income.dart';
 
@@ -32,15 +33,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      body: BlocProvider.value(
-        value: BlocProvider.of<GetUserTransactionsBloc>(context),
-        child: IndexedStack(
-          index: index,
-          children: const <Widget>[
-            MainScreen(),
-            StatsScreen(),
-          ],
-        ),
+      body: IndexedStack(
+        index: index,
+        children: const <Widget>[
+          MainScreen(),
+          StatsScreen(),
+        ],
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -102,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   .then((_) {
                 final transactionsBloc = context.read<GetUserTransactionsBloc>();
                 transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
-                transactionsBloc.add(FetchTotalTransaction());
+                context.read<GetAllTransactionBloc>().add(FetchAllTransactions());
               });
             },
           ),
@@ -129,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   .then((_) {
                 final transactionsBloc = context.read<GetUserTransactionsBloc>();
                 transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
-                transactionsBloc.add(FetchTotalTransaction());
+                context.read<GetAllTransactionBloc>().add(FetchAllTransactions());
               });
             },
           ),

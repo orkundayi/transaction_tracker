@@ -1,12 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application/blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
 import 'package:flutter_application/screens/transactions/views/all_transactions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:transaction_repository/transaction_repository.dart';
 
-import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
+import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart' as user_transactions;
 import 'total_balance_card.dart';
 
 class MainScreen extends StatefulWidget {
@@ -17,11 +18,13 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  late GetUserTransactionsBloc transactionsBloc;
+  late user_transactions.GetUserTransactionsBloc transactionsBloc;
+  late GetAllTransactionBloc allTransactionsBloc;
 
   @override
   void initState() {
-    transactionsBloc = context.read<GetUserTransactionsBloc>();
+    transactionsBloc = context.read<user_transactions.GetUserTransactionsBloc>();
+    allTransactionsBloc = context.read<GetAllTransactionBloc>();
     transactionsBloc.setTransactionMode(TransactionMode.last);
     transactionsBloc.setTransactionType(TransactionType.expense);
     super.initState();
@@ -33,15 +36,16 @@ class _MainScreenState extends State<MainScreen> {
     return SafeArea(
       child: RefreshIndicator.adaptive(
         onRefresh: () async {
-          transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+          transactionsBloc.add(user_transactions.FetchLastTransactions(transactionsBloc.transactionType));
+          allTransactionsBloc.add(FetchAllTransactions());
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              children: [
-                FittedBox(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: SizedBox(
                     width: screenWidth,
@@ -98,13 +102,16 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                BlocProvider.value(
-                  value: GetUserTransactionsBloc(FirebaseTransactionRepository()),
-                  child: const TotalBalanceCard(),
-                ),
-                const SizedBox(height: 10),
-                Column(
+              ),
+              const SizedBox(height: 10),
+              BlocProvider(
+                create: (context) => user_transactions.GetUserTransactionsBloc(FirebaseTransactionRepository()),
+                child: const TotalBalanceCard(),
+              ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -115,7 +122,7 @@ class _MainScreenState extends State<MainScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: DropdownButton(
-                            value: context.watch<GetUserTransactionsBloc>().transactionType,
+                            value: context.watch<user_transactions.GetUserTransactionsBloc>().transactionType,
                             items: const [
                               DropdownMenuItem(value: TransactionType.income, child: Text('Son Gelirler')),
                               DropdownMenuItem(value: TransactionType.expense, child: Text('Son Giderler')),
@@ -123,7 +130,7 @@ class _MainScreenState extends State<MainScreen> {
                             onChanged: (value) {
                               if (value != null) {
                                 transactionsBloc.setTransactionType(value);
-                                transactionsBloc.add(FetchLastTransactions(value));
+                                transactionsBloc.add(user_transactions.FetchLastTransactions(value));
                               }
                             },
                             style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16, fontWeight: FontWeight.bold),
@@ -149,7 +156,7 @@ class _MainScreenState extends State<MainScreen> {
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (context) => BlocProvider.value(
-                                  value: GetUserTransactionsBloc(FirebaseTransactionRepository()),
+                                  value: user_transactions.GetUserTransactionsBloc(FirebaseTransactionRepository()),
                                   child: const AllTransactions(),
                                 ),
                               ),
@@ -173,7 +180,7 @@ class _MainScreenState extends State<MainScreen> {
                         ),
                       ],
                     ),
-                    BlocBuilder<GetUserTransactionsBloc, FetchTransactionState>(
+                    BlocBuilder<user_transactions.GetUserTransactionsBloc, user_transactions.FetchTransactionState>(
                       builder: (context, state) {
                         if (state is FetchingInProgress) {
                           return const SizedBox(
@@ -183,7 +190,7 @@ class _MainScreenState extends State<MainScreen> {
                               child: CircularProgressIndicator(),
                             ),
                           );
-                        } else if (state is FetchingSuccess) {
+                        } else if (state is user_transactions.FetchingSuccess) {
                           final transactions = state.transactions;
                           if (transactions.isEmpty) {
                             return const Padding(
@@ -258,7 +265,7 @@ class _MainScreenState extends State<MainScreen> {
                               );
                             },
                           );
-                        } else if (state is TransactionFetchError) {
+                        } else if (state is user_transactions.TransactionFetchError) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 32.0, left: 8, right: 8),
                             child: Center(child: Text('Veriler yüklenirken hata oluştu: ${state.error}')),
@@ -273,8 +280,8 @@ class _MainScreenState extends State<MainScreen> {
                     )
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

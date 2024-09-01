@@ -24,6 +24,7 @@ dependencies:
   flutter_speed_dial: ^7.0.0
   transaction_repository:
     path: packages/transaction_repository
+  carousel_slider: ^5.0.0
   
   
 
