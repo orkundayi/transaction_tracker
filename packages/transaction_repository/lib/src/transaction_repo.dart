@@ -1,3 +1,5 @@
+import 'package:transaction_repository/src/models/account.dart';
+
 import 'models/transaction.dart';
 
 abstract class TransactionRepository {
@@ -10,4 +12,7 @@ abstract class TransactionRepository {
   Future<List<TransactionModel>> fetchTransactionsForThisMonth();
 
   Future<void> createTurkishAccountForUser();
+  Future<void> createSpesificAccountForUser(AccountModel account);
+
+  Future<List<AccountModel>> fetchAccountsForUser();
 }

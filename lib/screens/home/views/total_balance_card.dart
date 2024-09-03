@@ -357,7 +357,7 @@ class StarterCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        FirebaseTransactionRepository().createTurkishAccountForUser();
+        FirebaseTransactionRepository().createSpesificAccountForUser(AccountModel(code: 'EUR', name: 'Euro Hesabı', balance: 0.0));
       },
       child: Padding(
         padding: const EdgeInsets.all(4),

@@ -1,10 +1,9 @@
+import 'dart:async';
 import 'dart:developer';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:transaction_repository/src/models/transaction.dart';
-import 'package:transaction_repository/src/transaction_repo.dart';
+import 'package:transaction_repository/transaction_repository.dart';
 
 class FirebaseTransactionRepository implements TransactionRepository {
   final transactionCollection = FirebaseFirestore.instance.collection('transactions');
@@ -95,23 +94,44 @@ class FirebaseTransactionRepository implements TransactionRepository {
     });
   }
 
+  User? getCurrenUser() {
+    return FirebaseAuth.instance.currentUser;
+  }
+
+  // Account operations
   @override
   Future<void> createTurkishAccountForUser() async {
     final userAccount = await userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').get();
     if (!userAccount.exists) {
-      return userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').set({
-        'userId': getCurrenUser()?.uid ?? 'testUser',
-        'accounts': [
-          {
-            'code': 'TR',
-            'balance': 0.0,
-          },
-        ],
-      });
+      UserModel user = UserModel(userId: getCurrenUser()?.uid ?? 'testUser');
+      user.accounts.add(AccountModel(code: 'TR', name: 'Türk Lirası Hesabı', balance: 0.0));
+      return userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').set(user.toMap());
     }
   }
 
-  User? getCurrenUser() {
-    return FirebaseAuth.instance.currentUser;
+  @override
+  Future<void> createSpesificAccountForUser(AccountModel account) async {
+    final userAccount = await userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').get();
+    if (userAccount.exists) {
+      UserModel user = UserModel.fromMap(userAccount.data()!);
+      if (checkIfAccountAlreadyExists(user, account)) {
+        return;
+      }
+      user.accounts.add(account);
+      return userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').set(user.toMap());
+    }
   }
+
+  @override
+  Future<List<AccountModel>> fetchAccountsForUser() async {
+    final userAccount = await userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').get();
+    if (userAccount.exists) {
+      UserModel user = UserModel.fromMap(userAccount.data()!);
+      return user.accounts;
+    } else {
+      return [];
+    }
+  }
+
+  bool checkIfAccountAlreadyExists(UserModel user, AccountModel account) => user.accounts.firstWhereOrNull((element) => element.code == account.code) != null;
 }
