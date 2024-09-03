@@ -1,4 +1,4 @@
-import 'package:transaction_repository/src/models/account.dart';
+import '../../firebase_repository.dart';
 
 class UserModel {
   final String userId;

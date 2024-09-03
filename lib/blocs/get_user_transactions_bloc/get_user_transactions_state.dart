@@ -5,12 +5,12 @@ sealed class FetchTransactionState {}
 
 final class FetchTransactionInitial extends FetchTransactionState {}
 
-final class FetchingInProgress extends FetchTransactionState {}
+final class TransactionFetchingInProgress extends FetchTransactionState {}
 
-final class FetchingSuccess extends FetchTransactionState {
+final class TransactionFetchSuccess extends FetchTransactionState {
   final List<TransactionModel> transactions;
 
-  FetchingSuccess(this.transactions);
+  TransactionFetchSuccess(this.transactions);
 }
 
 final class TransactionFetchError extends FetchTransactionState {

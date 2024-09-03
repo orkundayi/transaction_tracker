@@ -13,8 +13,8 @@ final class FetchingSuccess extends GetAllTransactionState {
   FetchingSuccess(this.transactions);
 }
 
-final class TransactionFetchError extends GetAllTransactionState {
+final class AllTransactionFetchError extends GetAllTransactionState {
   final Object error;
 
-  TransactionFetchError(this.error);
+  AllTransactionFetchError(this.error);
 }

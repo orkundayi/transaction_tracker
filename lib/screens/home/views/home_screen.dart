@@ -1,3 +1,4 @@
+import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
@@ -6,11 +7,9 @@ import 'package:flutter_application/screens/home/views/main_screen.dart';
 import 'package:flutter_application/screens/stats/stats_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:transaction_repository/transaction_repository.dart';
 
 import '../../../blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
 import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
-import '../../add_income/views/add_income.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -112,24 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Gelir Ekle',
             backgroundColor: theme.scaffoldBackgroundColor,
             labelBackgroundColor: theme.scaffoldBackgroundColor,
-            onTap: () async {
-              await Navigator.of(context)
-                  .push(
-                MaterialPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => CreateTransactionBloc(
-                      FirebaseTransactionRepository(),
-                    ),
-                    child: const AddIncome(),
-                  ),
-                ),
-              )
-                  .then((_) {
-                final transactionsBloc = context.read<GetUserTransactionsBloc>();
-                transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
-                context.read<GetAllTransactionBloc>().add(FetchAllTransactions());
-              });
-            },
+            onTap: () async {},
           ),
         ],
       ),

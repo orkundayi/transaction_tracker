@@ -2,11 +2,16 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
+import 'package:flutter_application/blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:transaction_repository/transaction_repository.dart';
+
+import '../../../blocs/create_transaction_bloc/create_transaction_bloc.dart';
+import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
+import '../../add_income/views/add_income.dart';
 
 class TotalBalanceCard extends StatefulWidget {
   const TotalBalanceCard({super.key});
@@ -20,8 +25,11 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   bool _privateWidgetVisible = false;
   int _currentIndex = 0;
 
+  List<AccountModel> accounts = [];
+
   bool _loadedOnce = false;
   late GetAllTransactionBloc transactionsBloc;
+  late GetUserAccountsBloc getUserAccountsBloc;
   late Timer _timer;
   double _lastTotalBalance = 0.0;
   double _lastIncome = 0.0;
@@ -30,6 +38,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   @override
   void initState() {
     transactionsBloc = context.read<GetAllTransactionBloc>();
+    getUserAccountsBloc = context.read<GetUserAccountsBloc>();
     calculateTotalBalance();
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       calculateTotalBalance();
@@ -51,6 +60,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
 
   void calculateTotalBalance() {
     transactionsBloc.add(FetchAllTransactions());
+    getUserAccountsBloc.add(FetchUserAccounts());
   }
 
   @override
@@ -63,6 +73,26 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
             checkBalance(context, state);
           },
         ),
+        BlocListener<GetUserAccountsBloc, GetUserAccountsState>(
+          listener: (context, state) {
+            if (state is AccountsFetchSuccess) {
+              accounts = state.accounts;
+              accounts.sort((a, b) => a.code == 'TR'
+                  ? -1
+                  : b.code == 'TR'
+                      ? 1
+                      : 0);
+
+              setState(() {
+                _loadedOnce = true;
+              });
+            } else if (state is AccountFetchError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Veriler yüklenirken hata oluştu: ${state.error}')),
+              );
+            }
+          },
+        )
       ],
       child: _loadedOnce
           ? GestureDetector(
@@ -118,7 +148,8 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                           height: 200,
                           width: MediaQuery.of(context).size.width,
                           left: _privateWidgetVisible ? 180 : 0,
-                          child: CarouselSlider(
+                          child: CarouselSlider.builder(
+                            itemCount: accounts.length,
                             options: CarouselOptions(
                               viewportFraction: 0.85,
                               onPageChanged: (index, reason) {
@@ -132,23 +163,26 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                               scrollPhysics: _privateWidgetVisible ? const NeverScrollableScrollPhysics() : const AlwaysScrollableScrollPhysics(),
                             ),
                             carouselController: _carouselSliderController,
-                            items: [
-                              GestureDetector(
-                                onHorizontalDragEnd: (details) {
-                                  if (details.primaryVelocity! > 0 && !_privateWidgetVisible && _currentIndex == 0) {
-                                    setVisibleWidget();
-                                  } else if (details.primaryVelocity! < 0 && _privateWidgetVisible && _currentIndex == 0) {
-                                    setVisibleWidget();
-                                  } else if (details.primaryVelocity! < 0 && !_privateWidgetVisible && _currentIndex == 0) {
-                                    _carouselSliderController.nextPage(duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
-                                  }
-                                },
-                                child: const StarterCard(),
-                              ),
-                              TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense),
-                              TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense),
-                              TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense),
-                            ],
+                            itemBuilder: (context, index, realIndex) {
+                              switch (index) {
+                                case 0:
+                                  final account = accounts[index];
+                                  return GestureDetector(
+                                    onHorizontalDragEnd: (details) {
+                                      if (details.primaryVelocity! > 0 && !_privateWidgetVisible && _currentIndex == 0) {
+                                        setVisibleWidget();
+                                      } else if (details.primaryVelocity! < 0 && _privateWidgetVisible && _currentIndex == 0) {
+                                        setVisibleWidget();
+                                      } else if (details.primaryVelocity! < 0 && !_privateWidgetVisible && _currentIndex == 0) {
+                                        _carouselSliderController.nextPage(duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+                                      }
+                                    },
+                                    child: StarterCard(account: account),
+                                  );
+                                default:
+                                  return TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense);
+                              }
+                            },
                           ),
                         ),
                       ],
@@ -191,7 +225,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
       setState(() {
         _loadedOnce = true;
       });
-    } else if (state is TransactionFetchError) {
+    } else if (state is AllTransactionFetchError) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Veriler yüklenirken hata oluştu: ${state.error}')),
       );
@@ -351,13 +385,14 @@ class TotalBalance extends StatelessWidget {
 }
 
 class StarterCard extends StatelessWidget {
-  const StarterCard({super.key});
+  final AccountModel account;
+  const StarterCard({super.key, required this.account});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        FirebaseTransactionRepository().createSpesificAccountForUser(AccountModel(code: 'EUR', name: 'Euro Hesabı', balance: 0.0));
+        FirebaseAccountRepository().createSpesificAccountForUser(AccountModel(code: 'EUR', name: 'Euro Hesabı', balance: 0.0));
       },
       child: Padding(
         padding: const EdgeInsets.all(4),
@@ -375,17 +410,17 @@ class StarterCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Column(
+                Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Türk Lirası Hesabı',
-                      style: TextStyle(
+                      account.name,
+                      style: const TextStyle(
                         fontSize: 20,
                       ),
                     ),
-                    Divider(
+                    const Divider(
                       color: Colors.grey,
                       thickness: 1,
                       height: 8,
@@ -393,10 +428,10 @@ class StarterCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 32),
-                const Text(
-                  'Net Bakiye: ₺594,13',
+                Text(
+                  'Net Bakiye: ₺${account.balance}',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -405,75 +440,41 @@ class StarterCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            CupertinoIcons.arrow_down,
-                            color: Color(0xff45de52),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Column(
-                          children: [
-                            Text(
-                              'Gelirler',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await Navigator.of(context)
+                            .push(
+                          MaterialPageRoute(
+                            builder: (context) => BlocProvider(
+                              create: (context) => CreateTransactionBloc(
+                                FirebaseTransactionRepository(),
                               ),
+                              child: const AddIncome(),
                             ),
-                            Text(
-                              '800,00',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        )
+                            .then((_) {
+                          final transactionsBloc = context.read<GetUserTransactionsBloc>();
+                          transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+                          context.read<GetAllTransactionBloc>().add(FetchAllTransactions());
+                        });
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Gelir Ekle'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            CupertinoIcons.arrow_up,
-                            color: Color(0xfffb5e69),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Column(
-                          children: [
-                            Text(
-                              'Giderler',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              '₺205,87',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    )
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // Gider ekleme işlevi
+                      },
+                      icon: const Icon(Icons.remove),
+                      label: const Text('Gider Ekle'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),

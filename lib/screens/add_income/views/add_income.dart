@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart' as intl;
-import 'package:transaction_repository/transaction_repository.dart';
 
 import '../../add_expense/views/add_expense.dart';
 
@@ -79,6 +79,13 @@ class _AddIncomeState extends State<AddIncome> {
                               debugPrint(transaction.toString());
                               if (context.mounted) {
                                 context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
+                              }
+                              if (context.mounted) {
+                                FirebaseAccountRepository().changeBalanceForUserAccount(
+                                  AccountModel.emty()
+                                    ..balance = transaction.amount
+                                    ..code = transaction.currencyCode,
+                                );
                               }
                             } catch (e) {
                               log(e.toString());

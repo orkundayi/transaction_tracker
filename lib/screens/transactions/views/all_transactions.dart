@@ -1,8 +1,8 @@
+import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:transaction_repository/transaction_repository.dart';
 
 import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
 
@@ -103,7 +103,7 @@ class _AllTransactionsState extends State<AllTransactions> {
             ),
             BlocBuilder<GetUserTransactionsBloc, FetchTransactionState>(
               builder: (context, state) {
-                if (state is FetchingInProgress) {
+                if (state is TransactionFetchingInProgress) {
                   return const SliverToBoxAdapter(
                     child: SizedBox(
                       height: 120,
@@ -113,7 +113,7 @@ class _AllTransactionsState extends State<AllTransactions> {
                       ),
                     ),
                   );
-                } else if (state is FetchingSuccess) {
+                } else if (state is TransactionFetchSuccess) {
                   final transactions = state.transactions;
                   if (transactions.isEmpty) {
                     return const SliverToBoxAdapter(

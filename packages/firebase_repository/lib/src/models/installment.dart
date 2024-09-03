@@ -22,7 +22,7 @@ class InstallmentModel {
       installmentNumber: 0,
       amount: 0.0,
       calculatedAmount: 0.0,
-      dueDate: DateTime.now(),
+      dueDate: DateTime.now().toLocal(),
       currency: CurrencyModel.empty(),
     );
   }

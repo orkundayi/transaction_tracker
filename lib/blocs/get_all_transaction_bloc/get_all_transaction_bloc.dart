@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
+import 'package:firebase_repository/firebase_repository.dart';
 import 'package:meta/meta.dart';
-import 'package:transaction_repository/transaction_repository.dart';
 
 part 'get_all_transaction_event.dart';
 part 'get_all_transaction_state.dart';
@@ -15,7 +15,7 @@ class GetAllTransactionBloc extends Bloc<FetchAllTransactions, GetAllTransaction
         final transactions = await transactionRepository.fetchTransactionsForThisMonth();
         emit(FetchingSuccess(transactions));
       } catch (e) {
-        emit(TransactionFetchError(e));
+        emit(AllTransactionFetchError(e));
       }
     });
   }

@@ -1,13 +1,17 @@
+import 'package:firebase_repository/src/models/account_log.dart';
+
 class AccountModel {
-  final String code;
-  final String name;
-  final double balance;
+  String code;
+  String name;
+  double balance;
+  List<AccountLog> logs;
 
   AccountModel({
     required this.code,
     required this.name,
     required this.balance,
-  });
+    List<AccountLog>? logs,
+  }) : logs = logs ?? [];
 
   factory AccountModel.emty() {
     return AccountModel(

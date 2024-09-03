@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
+import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:transaction_repository/transaction_repository.dart';
 
 part 'get_user_transactions_event.dart';
 part 'get_user_transactions_state.dart';
@@ -33,42 +33,42 @@ class GetUserTransactionsBloc extends Bloc<GetTransactionEvent, FetchTransaction
 
   GetUserTransactionsBloc(this.transactionRepository) : super(FetchTransactionInitial()) {
     on<FetchUserTransactions>((event, emit) async {
-      emit(FetchingInProgress());
+      emit(TransactionFetchingInProgress());
       _transactionMode = TransactionMode.all;
       _transactionType = event.type ?? _transactionType;
       try {
         final transactions = await transactionRepository.fetchTransactionsForUser(_transactionType);
-        emit(FetchingSuccess(transactions));
+        emit(TransactionFetchSuccess(transactions));
       } catch (e) {
         emit(TransactionFetchError(e));
       }
     });
 
     on<FetchLastTransactions>((event, emit) async {
-      emit(FetchingInProgress());
+      emit(TransactionFetchingInProgress());
       _transactionMode = TransactionMode.last;
       _transactionType = event.type ?? _transactionType;
       try {
         final transactions = await transactionRepository.fetchLastTransactionsForUser(_transactionType);
-        emit(FetchingSuccess(transactions));
+        emit(TransactionFetchSuccess(transactions));
       } catch (e) {
         emit(TransactionFetchError(e));
       }
     });
 
     on<FetchTransactions>((event, emit) async {
-      emit(FetchingInProgress());
+      emit(TransactionFetchingInProgress());
       _transactionMode = event.mode ?? _transactionMode;
       _transactionType = event.type ?? _transactionType;
       try {
         switch (_transactionMode) {
           case TransactionMode.all:
             final transactions = await transactionRepository.fetchTransactionsForUser(_transactionType, firstDate: event.dateRange?.start, lastDate: event.dateRange?.end);
-            emit(FetchingSuccess(transactions));
+            emit(TransactionFetchSuccess(transactions));
             break;
           case TransactionMode.last:
             final transactions = await transactionRepository.fetchLastTransactionsForUser(_transactionType, firstDate: event.dateRange?.start, lastDate: event.dateRange?.end);
-            emit(FetchingSuccess(transactions));
+            emit(TransactionFetchSuccess(transactions));
           default:
         }
       } catch (e) {
