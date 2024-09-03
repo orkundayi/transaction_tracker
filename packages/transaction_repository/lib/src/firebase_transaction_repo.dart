@@ -8,6 +8,7 @@ import 'package:transaction_repository/src/transaction_repo.dart';
 
 class FirebaseTransactionRepository implements TransactionRepository {
   final transactionCollection = FirebaseFirestore.instance.collection('transactions');
+  final userAccountCollection = FirebaseFirestore.instance.collection('userAccounts');
   @override
   Future<void> createTransaction(TransactionModel transaction) async {
     try {
@@ -92,6 +93,22 @@ class FirebaseTransactionRepository implements TransactionRepository {
       debugPrint('snapshot.docs: ${snapshot.docs}');
       return snapshot.docs.map((doc) => TransactionModel.fromMap(doc.data())).toList();
     });
+  }
+
+  @override
+  Future<void> createTurkishAccountForUser() async {
+    final userAccount = await userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').get();
+    if (!userAccount.exists) {
+      return userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').set({
+        'userId': getCurrenUser()?.uid ?? 'testUser',
+        'accounts': [
+          {
+            'code': 'TR',
+            'balance': 0.0,
+          },
+        ],
+      });
+    }
   }
 
   User? getCurrenUser() {

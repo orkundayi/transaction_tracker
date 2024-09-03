@@ -56,27 +56,14 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return BlocListener<GetAllTransactionBloc, GetAllTransactionState>(
-      listener: (context, state) {
-        if (state is FetchingSuccess) {
-          final transactions = state.transactions;
-          final incomes = transactions.where((t) => t.type == TransactionType.income).toList();
-          final expenses = transactions.where((t) => t.type == TransactionType.expense).toList();
-          _lastIncome = incomes.fold(0,
-              (value, transaction) => value + ((transaction.calculatedAmount != null && transaction.calculatedAmount != 0.0) ? transaction.calculatedAmount! : transaction.amount));
-          _lastExpense = expenses.fold(0, (value, transaction) => value + checkIfExpenseHasInstallments(transaction));
-          _lastIncome = double.parse(_lastIncome.toStringAsFixed(2));
-          _lastExpense = double.parse(_lastExpense.toStringAsFixed(2));
-          _lastTotalBalance = _lastIncome - _lastExpense;
-          setState(() {
-            _loadedOnce = true;
-          });
-        } else if (state is TransactionFetchError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Veriler yüklenirken hata oluştu: ${state.error}')),
-          );
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<GetAllTransactionBloc, GetAllTransactionState>(
+          listener: (context, state) {
+            checkBalance(context, state);
+          },
+        ),
+      ],
       child: _loadedOnce
           ? GestureDetector(
               onHorizontalDragEnd: (details) {
@@ -156,7 +143,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                                     _carouselSliderController.nextPage(duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
                                   }
                                 },
-                                child: TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense),
+                                child: const StarterCard(),
                               ),
                               TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense),
                               TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense),
@@ -188,6 +175,27 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
               ),
             ),
     );
+  }
+
+  void checkBalance(BuildContext context, GetAllTransactionState state) {
+    if (state is FetchingSuccess) {
+      final transactions = state.transactions;
+      final incomes = transactions.where((t) => t.type == TransactionType.income).toList();
+      final expenses = transactions.where((t) => t.type == TransactionType.expense).toList();
+      _lastIncome = incomes.fold(
+          0, (value, transaction) => value + ((transaction.calculatedAmount != null && transaction.calculatedAmount != 0.0) ? transaction.calculatedAmount! : transaction.amount));
+      _lastExpense = expenses.fold(0, (value, transaction) => value + checkIfExpenseHasInstallments(transaction));
+      _lastIncome = double.parse(_lastIncome.toStringAsFixed(2));
+      _lastExpense = double.parse(_lastExpense.toStringAsFixed(2));
+      _lastTotalBalance = _lastIncome - _lastExpense;
+      setState(() {
+        _loadedOnce = true;
+      });
+    } else if (state is TransactionFetchError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Veriler yüklenirken hata oluştu: ${state.error}')),
+      );
+    }
   }
 
   double checkIfExpenseHasInstallments(TransactionModel transaction) {
@@ -335,6 +343,142 @@ class TotalBalance extends StatelessWidget {
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class StarterCard extends StatelessWidget {
+  const StarterCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        FirebaseTransactionRepository().createTurkishAccountForUser();
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Container(
+            padding: const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 10),
+            height: 200,
+            width: MediaQuery.of(context).size.width - 40,
+            decoration: const BoxDecoration(
+              color: Colors.black12,
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Türk Lirası Hesabı',
+                      style: TextStyle(
+                        fontSize: 20,
+                      ),
+                    ),
+                    Divider(
+                      color: Colors.grey,
+                      thickness: 1,
+                      height: 8,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'Net Bakiye: ₺594,13',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            CupertinoIcons.arrow_down,
+                            color: Color(0xff45de52),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Column(
+                          children: [
+                            Text(
+                              'Gelirler',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              '800,00',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            CupertinoIcons.arrow_up,
+                            color: Color(0xfffb5e69),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Column(
+                          children: [
+                            Text(
+                              'Giderler',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              '₺205,87',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
       ),
