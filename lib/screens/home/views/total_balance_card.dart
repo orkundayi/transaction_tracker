@@ -9,10 +9,6 @@ import 'package:flutter_application/blocs/get_all_transaction_bloc/get_all_trans
 import 'package:flutter_application/blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../blocs/create_transaction_bloc/create_transaction_bloc.dart';
-import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
-import '../../add_income/views/add_income.dart';
-
 class TotalBalanceCard extends StatefulWidget {
   const TotalBalanceCard({super.key});
 
@@ -149,7 +145,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                           width: MediaQuery.of(context).size.width,
                           left: _privateWidgetVisible ? 180 : 0,
                           child: CarouselSlider.builder(
-                            itemCount: accounts.length,
+                            itemCount: accounts.length + 1,
                             options: CarouselOptions(
                               viewportFraction: 0.85,
                               onPageChanged: (index, reason) {
@@ -164,6 +160,14 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                             ),
                             carouselController: _carouselSliderController,
                             itemBuilder: (context, index, realIndex) {
+                              if (index == accounts.length) {
+                                return Container(
+                                  color: Colors.red,
+                                  child: const Center(
+                                    child: Text('Son'),
+                                  ),
+                                );
+                              }
                               switch (index) {
                                 case 0:
                                   final account = accounts[index];
@@ -179,6 +183,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                                     },
                                     child: StarterCard(account: account),
                                   );
+
                                 default:
                                   return TotalBalance(theme: theme, totalBalance: _lastTotalBalance, income: _lastIncome, expense: _lastExpense);
                               }
@@ -390,96 +395,50 @@ class StarterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        FirebaseAccountRepository().createSpesificAccountForUser(AccountModel(code: 'EUR', name: 'Euro Hesabı', balance: 0.0));
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Container(
-            padding: const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 10),
-            height: 200,
-            width: MediaQuery.of(context).size.width - 40,
-            decoration: const BoxDecoration(
-              color: Colors.black12,
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      account.name,
-                      style: const TextStyle(
-                        fontSize: 20,
-                      ),
+    return Padding(
+      padding: const EdgeInsets.all(4),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Container(
+          padding: const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 10),
+          height: 200,
+          width: MediaQuery.of(context).size.width - 40,
+          decoration: const BoxDecoration(
+            color: Colors.black12,
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    account.name,
+                    style: const TextStyle(
+                      fontSize: 20,
                     ),
-                    const Divider(
-                      color: Colors.grey,
-                      thickness: 1,
-                      height: 8,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  'Net Bakiye: ₺${account.balance}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
                   ),
+                  const Divider(
+                    color: Colors.grey,
+                    thickness: 1,
+                    height: 8,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              Text(
+                '₺${account.balance}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        await Navigator.of(context)
-                            .push(
-                          MaterialPageRoute(
-                            builder: (context) => BlocProvider(
-                              create: (context) => CreateTransactionBloc(
-                                FirebaseTransactionRepository(),
-                              ),
-                              child: const AddIncome(),
-                            ),
-                          ),
-                        )
-                            .then((_) {
-                          final transactionsBloc = context.read<GetUserTransactionsBloc>();
-                          transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
-                          context.read<GetAllTransactionBloc>().add(FetchAllTransactions());
-                        });
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Gelir Ekle'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        // Gider ekleme işlevi
-                      },
-                      icon: const Icon(Icons.remove),
-                      label: const Text('Gider Ekle'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
+              ),
+              const SizedBox(height: 48),
+            ],
           ),
         ),
       ),

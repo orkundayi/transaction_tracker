@@ -2,7 +2,7 @@ import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
-import 'package:flutter_application/screens/add_expense/views/add_expense.dart';
+import 'package:flutter_application/screens/add_transaction/views/add_transaction.dart';
 import 'package:flutter_application/screens/home/views/main_screen.dart';
 import 'package:flutter_application/screens/stats/stats_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     create: (context) => CreateTransactionBloc(
                       FirebaseTransactionRepository(),
                     ),
-                    child: const AddExpense(),
+                    child: const AddTransactionPage(),
                   ),
                 ),
               )
