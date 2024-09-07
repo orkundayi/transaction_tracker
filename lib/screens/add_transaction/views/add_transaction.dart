@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
+import 'package:widgets/widgets.dart';
 
 class AddTransactionPage extends StatefulWidget {
   const AddTransactionPage({super.key});
@@ -202,7 +203,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       var currencies = parseCurrencyFromResponse(response.body);
       currencies.currencies.sort((a, b) => a.orderNo.compareTo(b.orderNo));
       if (mounted) {
-        showModalBottomSheet(
+        final result = await showModalBottomSheet(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           context: context,
           isScrollControlled: true,
@@ -214,92 +215,15 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           showDragHandle: true,
           enableDrag: false,
           builder: (context) {
-            return FractionallySizedBox(
-              heightFactor: 0.95,
-              child: Column(
-                children: [
-                  AppBar(
-                    automaticallyImplyLeading: false,
-                    centerTitle: true,
-                    title: const Text(
-                      'Para Birimi Seç',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    elevation: 0,
-                  ),
-                  // Arama çubuğu
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.search),
-                        hintText: 'Ara',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        fillColor: Colors.grey[200],
-                        filled: true,
-                      ),
-                    ),
-                  ),
-                  // Para birimi listesi
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: currencies.currencies.length,
-                      itemBuilder: (context, index) {
-                        var currency = currencies.currencies[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8.0,
-                            vertical: 4.0,
-                          ),
-                          child: Card(
-                            elevation: 2, // Hafif gölge efekti
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: ListTile(
-                              title: Text(
-                                currency.name ?? '',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              trailing: Text(
-                                getCurrencySymbolFromCurrencyCode(
-                                  currency.currencyCode ?? '',
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                ),
-                              ),
-                              onTap: () {
-                                _currentIcon = getCurrencySymbolFromCurrencyCode(
-                                  currency.currencyCode ?? '',
-                                );
-                                _currentCurrency = currency.currencyCode ?? '';
-                                debugPrint(
-                                  'Currency: $_currentCurrency, Icon: $_currentIcon',
-                                );
-                                setState(() {});
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return CurrencySelector(allCurrencies: currencies.currencies);
           },
         );
+        if (result != null) {
+          setState(() {
+            _currentCurrency = result['currencyCode'];
+            _currentIcon = result['currencySymbol'];
+          });
+        }
       }
     }
   }

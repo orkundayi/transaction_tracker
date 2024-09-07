@@ -24,6 +24,8 @@ dependencies:
   flutter_speed_dial: ^7.0.0
   firebase_repository:
     path: packages/firebase_repository
+  widgets:
+    path: packages/widgets
   carousel_slider: ^5.0.0
   
   
