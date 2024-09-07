@@ -27,9 +27,9 @@ class _AddExpenseState extends State<AddExpense> {
   final TextEditingController _categoryController = TextEditingController(text: 'Kategori Seçin');
   final TextEditingController _installmentCountController = TextEditingController();
 
-  void _toggleCurrency() async {
+  /* void _toggleCurrency() async {
     await getCurrencyList();
-  }
+  } */
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,6 @@ class _AddExpenseState extends State<AddExpense> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      currencyTextFormField(),
                       const SizedBox(height: 16),
                       categoryTextFormField(),
                       const SizedBox(height: 16),
@@ -219,79 +218,6 @@ class _AddExpenseState extends State<AddExpense> {
         );
       }
     }
-  }
-
-  Widget currencyTextFormField() {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.9,
-      child: TextFormField(
-        controller: _currencyController,
-        onChanged: (value) {
-          _currencyController.text = value;
-        },
-        textAlignVertical: TextAlignVertical.center,
-        decoration: InputDecoration(
-          fillColor: Colors.white,
-          filled: true,
-          prefixIcon: GestureDetector(
-            onTap: _toggleCurrency,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Stack(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                    ),
-                    height: 40,
-                    margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 20,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        _currentIcon,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Positioned(
-                    top: 4,
-                    right: 6,
-                    child: Text(
-                      '*',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          hintText: 'Tutar',
-          hintTextDirection: TextDirection.ltr,
-          border: const OutlineInputBorder(
-            borderSide: BorderSide.none,
-            borderRadius: BorderRadius.all(Radius.circular(24)),
-          ),
-        ),
-      ),
-    );
   }
 
   Widget categoryTextFormField() {
