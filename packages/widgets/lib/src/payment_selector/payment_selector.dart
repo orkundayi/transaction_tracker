@@ -54,7 +54,7 @@ class _PaymentSelectorState extends State<PaymentSelector> {
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-      opacity: _opacity, // Opacity animasyonu
+      opacity: _opacity,
       duration: const Duration(milliseconds: 300),
       child: _buildPageContent(_currentState),
     );

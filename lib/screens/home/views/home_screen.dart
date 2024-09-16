@@ -1,7 +1,6 @@
 import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import 'package:flutter_application/screens/add_transaction/views/add_transaction.dart';
 import 'package:flutter_application/screens/home/views/main_screen.dart';
 import 'package:flutter_application/screens/stats/stats_screen.dart';
@@ -88,10 +87,15 @@ class _HomeScreenState extends State<HomeScreen> {
               await Navigator.of(context)
                   .push(
                 MaterialPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => CreateTransactionBloc(
-                      FirebaseTransactionRepository(),
-                    ),
+                  builder: (context) => MultiBlocProvider(
+                    providers: [
+                      BlocProvider(
+                        create: (context) => GetAllTransactionBloc(FirebaseTransactionRepository()),
+                      ),
+                      BlocProvider(
+                        create: (context) => GetUserTransactionsBloc(FirebaseTransactionRepository()),
+                      ),
+                    ],
                     child: const AddTransactionPage(),
                   ),
                 ),

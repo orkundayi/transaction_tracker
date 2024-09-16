@@ -2,10 +2,12 @@ import 'dart:developer';
 
 import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:widgets/widgets.dart';
+
+import '../../../blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
+import 'user_account_selector/user_account_selector.dart';
 
 class AddTransactionPage extends StatefulWidget {
   const AddTransactionPage({super.key});
@@ -26,172 +28,215 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   DateTime? installmentDate;
   DateTime? paymentDate;
 
+  AccountModel? selectedAccount;
+  AccountModel? selectedTransferAccount;
+
   void _toggleCurrency() async {
     await getCurrencyList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: context.read<CreateTransactionBloc>(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Kayıt Ekle'),
-          centerTitle: true,
-          backgroundColor: Colors.white,
-        ),
-        body: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadiusDirectional.only(
-                    bottomStart: Radius.circular(24),
-                    bottomEnd: Radius.circular(24),
-                  ),
-                  color: _getContainerColor(),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Kayıt Ekle'),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadiusDirectional.only(
+                  bottomStart: Radius.circular(24),
+                  bottomEnd: Radius.circular(24),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      Stack(
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            width: MediaQuery.of(context).size.width,
+                color: _getContainerColor(),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          width: MediaQuery.of(context).size.width,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: _getContainerColor(),
+                          ),
+                        ),
+                        AnimatedAlign(
+                          duration: const Duration(milliseconds: 300),
+                          alignment: _getAlignment(),
+                          child: Container(
+                            width: MediaQuery.of(context).size.width / 3,
                             height: 36,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              color: _getContainerColor(),
+                              color: Colors.white,
                             ),
                           ),
-                          AnimatedAlign(
-                            duration: const Duration(milliseconds: 300),
-                            alignment: _getAlignment(),
-                            child: Container(
-                              width: MediaQuery.of(context).size.width / 3,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                color: Colors.white,
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 36,
+                                child: Center(
+                                  child: Text(
+                                    'Gider',
+                                    style: TextStyle(
+                                      color: checkIfExpense ? Theme.of(context).colorScheme.primary : Colors.black,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: SizedBox(
-                                  height: 36,
-                                  child: Center(
-                                    child: Text(
-                                      'Gider',
-                                      style: TextStyle(
-                                        color: checkIfExpense ? Colors.blue : Colors.black,
-                                      ),
+                            Expanded(
+                              child: SizedBox(
+                                height: 36,
+                                child: Center(
+                                  child: Text(
+                                    'Gelir',
+                                    style: TextStyle(
+                                      color: _pageStateNotifier.value == PaymentSelectionState.income ? Theme.of(context).colorScheme.primary : Colors.black,
                                     ),
                                   ),
                                 ),
                               ),
-                              Expanded(
-                                child: SizedBox(
-                                  height: 36,
-                                  child: Center(
-                                    child: Text(
-                                      'Gelir',
-                                      style: TextStyle(
-                                        color: _pageStateNotifier.value == PaymentSelectionState.income ? Colors.blue : Colors.black,
-                                      ),
+                            ),
+                            Expanded(
+                              child: SizedBox(
+                                height: 36,
+                                child: Center(
+                                  child: Text(
+                                    'Transfer',
+                                    style: TextStyle(
+                                      color: _pageStateNotifier.value == PaymentSelectionState.transfer ? Theme.of(context).colorScheme.primary : Colors.black,
                                     ),
                                   ),
                                 ),
                               ),
-                              Expanded(
-                                child: SizedBox(
-                                  height: 36,
-                                  child: Center(
-                                    child: Text(
-                                      'Transfer',
-                                      style: TextStyle(
-                                        color: _pageStateNotifier.value == PaymentSelectionState.transfer ? Colors.blue : Colors.black,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _pageStateNotifier.value = PaymentSelectionState.expense;
+                                  });
+                                },
+                                child: const SizedBox(height: 36),
                               ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _pageStateNotifier.value = PaymentSelectionState.expense;
-                                    });
-                                  },
-                                  child: const SizedBox(height: 36),
-                                ),
+                            ),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _pageStateNotifier.value = PaymentSelectionState.income;
+                                  });
+                                },
+                                child: const SizedBox(height: 36),
                               ),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _pageStateNotifier.value = PaymentSelectionState.income;
-                                    });
-                                  },
-                                  child: const SizedBox(height: 36),
-                                ),
+                            ),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _pageStateNotifier.value = PaymentSelectionState.transfer;
+                                  });
+                                },
+                                child: const SizedBox(height: 36),
                               ),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _pageStateNotifier.value = PaymentSelectionState.transfer;
-                                    });
-                                  },
-                                  child: const SizedBox(height: 36),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      currencyTextFormField(),
-                    ],
-                  ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    currencyTextFormField(),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
-              PaymentSelector(pageStateNotifier: _pageStateNotifier)
-            ],
-          ),
-        ),
-        bottomNavigationBar: Container(
-          height: 68,
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(16),
             ),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 20,
-                offset: Offset(0, -10),
-              ),
-            ],
+            const SizedBox(height: 10),
+            UserAccountSelectorWidget(
+              pageStateNotifier: _pageStateNotifier,
+              onAccountSelected: () async {
+                final AccountModel? account = await showModalBottomSheet(
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (context) {
+                    return BlocProvider(
+                      create: (context) => GetUserAccountsBloc(FirebaseAccountRepository()),
+                      child: const UserAccountSelector(),
+                    );
+                  },
+                );
+                if (account != null) {
+                  setState(() {
+                    selectedAccount = account;
+                  });
+                }
+              },
+              onTransferAccountSelected: () async {
+                final AccountModel? account = await showModalBottomSheet(
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (context) {
+                    return BlocProvider(
+                      create: (context) => GetUserAccountsBloc(FirebaseAccountRepository()),
+                      child: const UserAccountSelector(),
+                    );
+                  },
+                );
+                if (account != null) {
+                  setState(() {
+                    selectedTransferAccount = account;
+                  });
+                }
+              },
+              selectedAccount: selectedAccount,
+              selectedTransferAccount: selectedTransferAccount,
+            ),
+            const SizedBox(height: 10),
+            PaymentSelector(pageStateNotifier: _pageStateNotifier)
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        height: 68,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(16),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: TextButton(
-            onPressed: () async {
-              try {
-                /* final TransactionModel transaction = TransactionModel.empty();
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 20,
+              offset: Offset(0, -10),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: TextButton(
+          onPressed: () async {
+            try {
+              /* final TransactionModel transaction = TransactionModel.empty();
                 transaction.amount = double.parse(_currencyController.text);
                 transaction.currencyCode = _currentCurrency;
                 transaction.category = CategoryModel.empty(CategoryType.otherExpense);
@@ -202,28 +247,27 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                 if (context.mounted) {
                   context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
                 } */
-              } catch (e) {
-                log(e.toString());
-              } finally {
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
+            } catch (e) {
+              log(e.toString());
+            } finally {
+              if (context.mounted) {
+                Navigator.pop(context);
               }
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              shadowColor: Colors.black,
-              elevation: 1,
+            }
+          },
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
             ),
-            child: const Text(
-              'Gider Ekle',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            shadowColor: Colors.black,
+            elevation: 1,
+          ),
+          child: const Text(
+            'Gider Ekle',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),

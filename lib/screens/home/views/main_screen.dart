@@ -62,9 +62,9 @@ class _MainScreenState extends State<MainScreen> {
                                 Container(
                                   width: 40,
                                   height: 40,
-                                  decoration: const BoxDecoration(
+                                  decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.blue,
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                                 const Icon(
