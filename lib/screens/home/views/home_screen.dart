@@ -97,9 +97,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               )
                   .then((_) {
-                final transactionsBloc = context.read<GetUserTransactionsBloc>();
-                transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
-                context.read<GetAllTransactionBloc>().add(FetchAllTransactions());
+                if (context.mounted) {
+                  final transactionsBloc = context.read<GetUserTransactionsBloc>();
+                  transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+                  context.read<GetAllTransactionBloc>().add(FetchAllTransactions());
+                }
               });
             },
           ),

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/create_transaction_bloc/create_transaction_bloc.dart';
@@ -9,16 +11,20 @@ class AddTransactionPage extends StatefulWidget {
   const AddTransactionPage({super.key});
 
   @override
-  State<AddTransactionPage> createState() => _AddTransactionPageState();
+  State<AddTransactionPage> createState() => _AddPaymentSelectionState();
 }
 
-class _AddTransactionPageState extends State<AddTransactionPage> {
-  TransactionPageState _transactionPageState = TransactionPageState.expense;
-
+class _AddPaymentSelectionState extends State<AddTransactionPage> {
   final TextEditingController _currencyController = TextEditingController();
+
+  final ValueNotifier<PaymentSelectionState> _pageStateNotifier = ValueNotifier<PaymentSelectionState>(PaymentSelectionState.expense);
 
   String _currentIcon = '₺';
   String _currentCurrency = 'TR';
+
+  bool isInstallment = false;
+  DateTime? installmentDate;
+  DateTime? paymentDate;
 
   void _toggleCurrency() async {
     await getCurrencyList();
@@ -39,144 +45,201 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  height: 120,
-                  width: MediaQuery.of(context).size.width,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: _getContainerColor(),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadiusDirectional.only(
+                    bottomStart: Radius.circular(24),
+                    bottomEnd: Radius.circular(24),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        Stack(
-                          children: [
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: MediaQuery.of(context).size.width,
+                  color: _getContainerColor(),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Stack(
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            width: MediaQuery.of(context).size.width,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: _getContainerColor(),
+                            ),
+                          ),
+                          AnimatedAlign(
+                            duration: const Duration(milliseconds: 300),
+                            alignment: _getAlignment(),
+                            child: Container(
+                              width: MediaQuery.of(context).size.width / 3,
                               height: 36,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
-                                color: _getContainerColor(),
+                                color: Colors.white,
                               ),
                             ),
-                            AnimatedAlign(
-                              duration: const Duration(milliseconds: 300),
-                              alignment: _getAlignment(),
-                              child: Container(
-                                width: MediaQuery.of(context).size.width / 3,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: Colors.white,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: SizedBox(
+                                  height: 36,
+                                  child: Center(
+                                    child: Text(
+                                      'Gider',
+                                      style: TextStyle(
+                                        color: checkIfExpense ? Colors.blue : Colors.black,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: SizedBox(
-                                    height: 36,
-                                    child: Center(
-                                      child: Text(
-                                        'Gider',
-                                        style: TextStyle(
-                                          color: _transactionPageState == TransactionPageState.expense ? Colors.blue : Colors.black,
-                                        ),
+                              Expanded(
+                                child: SizedBox(
+                                  height: 36,
+                                  child: Center(
+                                    child: Text(
+                                      'Gelir',
+                                      style: TextStyle(
+                                        color: _pageStateNotifier.value == PaymentSelectionState.income ? Colors.blue : Colors.black,
                                       ),
                                     ),
                                   ),
                                 ),
-                                Expanded(
-                                  child: SizedBox(
-                                    height: 36,
-                                    child: Center(
-                                      child: Text(
-                                        'Gelir',
-                                        style: TextStyle(
-                                          color: _transactionPageState == TransactionPageState.income ? Colors.blue : Colors.black,
-                                        ),
+                              ),
+                              Expanded(
+                                child: SizedBox(
+                                  height: 36,
+                                  child: Center(
+                                    child: Text(
+                                      'Transfer',
+                                      style: TextStyle(
+                                        color: _pageStateNotifier.value == PaymentSelectionState.transfer ? Colors.blue : Colors.black,
                                       ),
                                     ),
                                   ),
                                 ),
-                                Expanded(
-                                  child: SizedBox(
-                                    height: 36,
-                                    child: Center(
-                                      child: Text(
-                                        'Transfer',
-                                        style: TextStyle(
-                                          color: _transactionPageState == TransactionPageState.transfer ? Colors.blue : Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _pageStateNotifier.value = PaymentSelectionState.expense;
+                                    });
+                                  },
+                                  child: const SizedBox(height: 36),
                                 ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: InkWell(
-                                    onTap: () {
-                                      setState(() {
-                                        _transactionPageState = TransactionPageState.expense;
-                                      });
-                                    },
-                                    child: const SizedBox(height: 36),
-                                  ),
+                              ),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _pageStateNotifier.value = PaymentSelectionState.income;
+                                    });
+                                  },
+                                  child: const SizedBox(height: 36),
                                 ),
-                                Expanded(
-                                  child: InkWell(
-                                    onTap: () {
-                                      setState(() {
-                                        _transactionPageState = TransactionPageState.income;
-                                      });
-                                    },
-                                    child: const SizedBox(height: 36),
-                                  ),
+                              ),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _pageStateNotifier.value = PaymentSelectionState.transfer;
+                                    });
+                                  },
+                                  child: const SizedBox(height: 36),
                                 ),
-                                Expanded(
-                                  child: InkWell(
-                                    onTap: () {
-                                      setState(() {
-                                        _transactionPageState = TransactionPageState.transfer;
-                                      });
-                                    },
-                                    child: const SizedBox(height: 36),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        currencyTextFormField(),
-                      ],
-                    ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      currencyTextFormField(),
+                    ],
                   ),
                 ),
               ),
+              const SizedBox(height: 10),
+              PaymentSelector(pageStateNotifier: _pageStateNotifier)
             ],
+          ),
+        ),
+        bottomNavigationBar: Container(
+          height: 68,
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(16),
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 20,
+                offset: Offset(0, -10),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: TextButton(
+            onPressed: () async {
+              try {
+                /* final TransactionModel transaction = TransactionModel.empty();
+                transaction.amount = double.parse(_currencyController.text);
+                transaction.currencyCode = _currentCurrency;
+                transaction.category = CategoryModel.empty(CategoryType.otherExpense);
+                transaction.category!.name = _categoryController.text;
+                transaction.category!.type = categoryType;
+                await transactionCalculate(transaction);
+                debugPrint(transaction.toString());
+                if (context.mounted) {
+                  context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
+                } */
+              } catch (e) {
+                log(e.toString());
+              } finally {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              }
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              shadowColor: Colors.black,
+              elevation: 1,
+            ),
+            child: const Text(
+              'Gider Ekle',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Helper method to get the alignment for the moving container
+  bool get checkIfExpense => _pageStateNotifier.value == PaymentSelectionState.expense;
+
   Alignment _getAlignment() {
-    switch (_transactionPageState) {
-      case TransactionPageState.expense:
+    switch (_pageStateNotifier.value) {
+      case PaymentSelectionState.expense:
         return Alignment.topLeft;
-      case TransactionPageState.income:
+      case PaymentSelectionState.income:
         return Alignment.topCenter;
-      case TransactionPageState.transfer:
+      case PaymentSelectionState.transfer:
         return Alignment.topRight;
       default:
         return Alignment.topLeft;
@@ -184,12 +247,12 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   }
 
   Color _getContainerColor() {
-    switch (_transactionPageState) {
-      case TransactionPageState.expense:
+    switch (_pageStateNotifier.value) {
+      case PaymentSelectionState.expense:
         return Colors.redAccent.withOpacity(0.2);
-      case TransactionPageState.income:
+      case PaymentSelectionState.income:
         return Colors.greenAccent.withOpacity(0.2);
-      case TransactionPageState.transfer:
+      case PaymentSelectionState.transfer:
         return const Color.fromARGB(255, 61, 124, 153).withOpacity(0.2);
       default:
         return Colors.grey.withOpacity(0.2);
@@ -235,12 +298,13 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
 
   Widget currencyTextFormField() {
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.9,
+      width: MediaQuery.of(context).size.width,
       child: TextFormField(
         controller: _currencyController,
         onChanged: (value) {
-          _currencyController.text = value;
+          checkIfValueIsNumeric(value);
         },
+        keyboardType: TextInputType.number,
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
           fillColor: Colors.white,
@@ -310,10 +374,14 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       ),
     );
   }
-}
 
-enum TransactionPageState {
-  expense,
-  income,
-  transfer,
+  void checkIfValueIsNumeric(String value) {
+    if (value.isNotEmpty) {
+      try {
+        double.parse(value);
+      } catch (e) {
+        _currencyController.text = value.substring(0, value.length - 1);
+      }
+    }
+  }
 }

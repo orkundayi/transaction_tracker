@@ -48,7 +48,7 @@ class CurrencySelectorState extends State<CurrencySelector> {
             automaticallyImplyLeading: false,
             centerTitle: true,
             title: const Text(
-              'Add Currency',
+              'Para Birimi Seçin',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -56,14 +56,13 @@ class CurrencySelectorState extends State<CurrencySelector> {
             ),
             elevation: 0,
           ),
-          // Arama çubuğu
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
-                hintText: 'Type currency name',
+                hintText: 'Arama yapın...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -74,7 +73,6 @@ class CurrencySelectorState extends State<CurrencySelector> {
               onChanged: _filterCurrencies,
             ),
           ),
-          // Para birimi listesi
           Expanded(
             child: ListView.builder(
               itemCount: _filteredCurrencies.length,

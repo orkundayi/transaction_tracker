@@ -13,6 +13,7 @@ dependencies:
   http: ^1.2.2
   firebase_repository:
     path: ../firebase_repository
+  font_awesome_flutter: ^10.7.0
 
 dev_dependencies:
   flutter_test:
