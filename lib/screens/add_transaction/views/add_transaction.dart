@@ -26,6 +26,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
 
   bool isInstallment = false;
   DateTime? installmentDate;
+  int? installmentCount;
   DateTime? paymentDate;
 
   AccountModel? selectedAccount;
@@ -213,7 +214,20 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
               selectedTransferAccount: selectedTransferAccount,
             ),
             const SizedBox(height: 10),
-            PaymentSelector(pageStateNotifier: _pageStateNotifier)
+            PaymentSelector(
+              pageStateNotifier: _pageStateNotifier,
+              onDataChanged: (isInstallment, paymentDate, installmentDate, installmentCount) {
+                this.isInstallment = isInstallment;
+                this.paymentDate = paymentDate;
+                this.installmentDate = installmentDate;
+                this.installmentCount = int.tryParse(installmentCount);
+                log('********** Data Changed **********');
+                log('isInstallment: ${this.isInstallment}');
+                log('Payment Date: ${this.paymentDate}');
+                log('Installment Date: ${this.installmentDate}');
+                log('Installment Count: ${this.installmentCount}');
+              },
+            ),
           ],
         ),
       ),
@@ -342,8 +356,12 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
 
   Widget currencyTextFormField() {
     return SizedBox(
-      width: MediaQuery.of(context).size.width,
+      width: MediaQuery.of(context).size.width * 0.95,
       child: TextFormField(
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 18,
+        ),
         controller: _currencyController,
         onChanged: (value) {
           checkIfValueIsNumeric(value);
@@ -359,35 +377,38 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
               fit: BoxFit.scaleDown,
               child: Stack(
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                    ),
-                    height: 36,
-                    margin: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: _getContainerColor(),
-                        width: 2,
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
                       ),
-                      color: _getContainerColor().withOpacity(0.05),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 20,
-                          offset: Offset(0, 10),
+                      height: 36,
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _getContainerColor(),
+                          width: 2,
                         ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        _currentIcon,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w400,
+                        color: _getContainerColor().withOpacity(0.05),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          _currentIcon,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
@@ -408,11 +429,14 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
               ),
             ),
           ),
-          hintText: 'Tutar',
+          hintText: ' Tutar Giriniz',
+          hintStyle: const TextStyle(
+            color: Colors.black,
+          ),
           hintTextDirection: TextDirection.ltr,
           border: const OutlineInputBorder(
             borderSide: BorderSide.none,
-            borderRadius: BorderRadius.all(Radius.circular(24)),
+            borderRadius: BorderRadius.all(Radius.circular(20)),
           ),
         ),
       ),

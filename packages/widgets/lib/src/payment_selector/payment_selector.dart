@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:widgets/src/payment_selector/expense.dart';
 
@@ -11,8 +9,9 @@ enum PaymentSelectionState {
 
 class PaymentSelector extends StatefulWidget {
   final ValueNotifier<PaymentSelectionState> pageStateNotifier;
+  final Function(bool isInstallment, DateTime? paymentDate, DateTime? installmentDate, String installmentCount) onDataChanged;
 
-  const PaymentSelector({super.key, required this.pageStateNotifier});
+  const PaymentSelector({super.key, required this.pageStateNotifier, required this.onDataChanged});
 
   @override
   State<PaymentSelector> createState() => _PaymentSelectorState();
@@ -65,11 +64,7 @@ class _PaymentSelectorState extends State<PaymentSelector> {
       case PaymentSelectionState.expense:
         return ExpenseWidget(
           onDataChanged: (isInstallment, paymentDate, installmentDate, installmentCount) {
-            log('********** Data Changed **********');
-            log('isInstallment: $isInstallment');
-            log('Payment Date: $paymentDate');
-            log('Installment Date: $installmentDate');
-            log('Installment Count: $installmentCount');
+            widget.onDataChanged(isInstallment, paymentDate, installmentDate, installmentCount);
           },
         );
       case PaymentSelectionState.income:
