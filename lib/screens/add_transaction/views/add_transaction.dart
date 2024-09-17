@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:widgets/widgets.dart';
 
+import '../../../blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import '../../../blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
 import 'user_account_selector/user_account_selector.dart';
 
@@ -31,6 +32,9 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
 
   AccountModel? selectedAccount;
   AccountModel? selectedTransferAccount;
+
+  CategoryType? categoryType = CategoryType.otherExpense;
+  final TextEditingController _categoryController = TextEditingController(text: 'Kategori Seçin');
 
   void _toggleCurrency() async {
     await getCurrencyList();
@@ -214,9 +218,29 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
               selectedTransferAccount: selectedTransferAccount,
             ),
             const SizedBox(height: 10),
-            PaymentSelector(
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              reverseDuration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return ScaleTransition(scale: animation, child: child);
+              },
+              child: _pageStateNotifier.value != PaymentSelectionState.transfer
+                  ? CategorySelectorWidget(
+                      onDataChanged: (categoryName, categoryType) {
+                        this.categoryType = categoryType;
+                        _categoryController.text = categoryName;
+                        log('********** Data Changed **********');
+                        log('Category Name: $categoryName');
+                        log('Category Type: $categoryType');
+                      },
+                    )
+                  : const SizedBox(),
+            ),
+            const SizedBox(height: 10),
+            PaymentSelectorWidget(
+              categoryType: categoryType!,
               pageStateNotifier: _pageStateNotifier,
-              onDataChanged: (isInstallment, paymentDate, installmentDate, installmentCount) {
+              onDataChangedForExpense: (isInstallment, paymentDate, installmentDate, installmentCount) {
                 this.isInstallment = isInstallment;
                 this.paymentDate = paymentDate;
                 this.installmentDate = installmentDate;
@@ -226,6 +250,11 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                 log('Payment Date: ${this.paymentDate}');
                 log('Installment Date: ${this.installmentDate}');
                 log('Installment Count: ${this.installmentCount}');
+              },
+              onDataChangedForIncome: (paymentDate) {
+                this.paymentDate = paymentDate;
+                log('********** Payment Date Changed **********');
+                log('Payment Date: ${this.paymentDate}');
               },
             ),
           ],
@@ -250,17 +279,18 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
         child: TextButton(
           onPressed: () async {
             try {
-              /* final TransactionModel transaction = TransactionModel.empty();
-                transaction.amount = double.parse(_currencyController.text);
-                transaction.currencyCode = _currentCurrency;
-                transaction.category = CategoryModel.empty(CategoryType.otherExpense);
-                transaction.category!.name = _categoryController.text;
-                transaction.category!.type = categoryType;
-                await transactionCalculate(transaction);
-                debugPrint(transaction.toString());
-                if (context.mounted) {
-                  context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
-                } */
+              final TransactionModel transaction = TransactionModel.empty();
+              transaction.amount = double.parse(_currencyController.text);
+              transaction.currencyCode = _currentCurrency;
+              transaction.category = CategoryModel.empty(CategoryType.otherExpense);
+              transaction.category!.name = _categoryController.text == 'Kategori Seçin' ? 'Diğer' : _categoryController.text;
+              transaction.category!.type = categoryType;
+              await transactionCalculate(transaction);
+              debugPrint(transaction.toString());
+              if (context.mounted) {
+                context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
+              }
+              if (context.mounted) {}
             } catch (e) {
               log(e.toString());
             } finally {
@@ -278,7 +308,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
             elevation: 1,
           ),
           child: const Text(
-            'Gider Ekle',
+            'Kaydet',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -450,6 +480,91 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
       } catch (e) {
         _currencyController.text = value.substring(0, value.length - 1);
       }
+    }
+  }
+
+  transactionCalculate(TransactionModel transaction) async {
+    switch (_pageStateNotifier.value) {
+      case PaymentSelectionState.expense:
+        if (installmentCount != null && installmentDate != null) {
+          await transactionCalculateForExpense(transaction);
+        }
+        break;
+      case PaymentSelectionState.income:
+        await transactionCalculateForIncome(transaction);
+        break;
+      case PaymentSelectionState.transfer:
+        // TODO: Handle for transfer case.
+        break;
+      default:
+    }
+  }
+
+  // Expense
+  Future<void> transactionCalculateForExpense(TransactionModel transaction) async {
+    if (isInstallment) {
+      transaction.installments = await createInstallments();
+    } else {
+      transaction.date = paymentDate!;
+    }
+    transaction.type = TransactionType.expense;
+  }
+
+  Future<List<InstallmentModel>?> createInstallments() async {
+    CurrencyModel currency = CurrencyModel.empty();
+    currency.currencyCode = _currentCurrency;
+    currency.kod = _currentCurrency;
+
+    final selectedCurrency = await getCurrencies().then((value) async {
+      final currencies = parseCurrencyFromResponse(value.body);
+      return currencies.currencies.firstWhere((c) => c.currencyCode == _currentCurrency, orElse: () => currency);
+    });
+
+    if (installmentCount != null && installmentDate != null) {
+      List<InstallmentModel> installments = [];
+      for (int i = 0; i < installmentCount!; i++) {
+        installments.add(
+          InstallmentModel(
+            installmentNumber: i + 1,
+            amount: double.parse(_currencyController.text) / installmentCount!,
+            dueDate: DateTime(
+              installmentDate!.year,
+              installmentDate!.month + i,
+              installmentDate!.day,
+            ),
+            calculatedAmount: calculateRelateToCurrency(
+              double.parse(_currencyController.text) / installmentCount!,
+              selectedCurrency,
+            ),
+            currency: currency,
+          ),
+        );
+      }
+      return installments;
+    }
+    return null;
+  }
+
+  double calculateRelateToCurrency(double amount, CurrencyModel selectedCurrency) {
+    if (selectedCurrency.currencyCode != 'TR' && selectedCurrency.forexBuying != null) {
+      return amount * selectedCurrency.forexBuying!;
+    }
+    return 0.0;
+  }
+
+  // Income
+  Future<void> transactionCalculateForIncome(TransactionModel transaction) async {
+    CurrencyModel currency = CurrencyModel.empty();
+    currency.currencyCode = _currentCurrency;
+    currency.kod = _currentCurrency;
+    transaction.date = paymentDate!;
+    transaction.type = TransactionType.income;
+    final selectedCurrency = await getCurrencies().then((value) async {
+      final currencies = parseCurrencyFromResponse(value.body);
+      return currencies.currencies.firstWhere((c) => c.currencyCode == _currentCurrency, orElse: () => currency);
+    });
+    if (selectedCurrency.currencyCode != 'TR' && selectedCurrency.forexBuying != null) {
+      transaction.calculatedAmount = transaction.amount * selectedCurrency.forexBuying!;
     }
   }
 }

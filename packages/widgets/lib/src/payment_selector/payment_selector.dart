@@ -1,5 +1,7 @@
+import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:widgets/src/payment_selector/expense.dart';
+import 'package:widgets/src/payment_selector/income.dart';
 
 enum PaymentSelectionState {
   expense,
@@ -7,17 +9,20 @@ enum PaymentSelectionState {
   transfer,
 }
 
-class PaymentSelector extends StatefulWidget {
+class PaymentSelectorWidget extends StatefulWidget {
+  final CategoryType categoryType;
   final ValueNotifier<PaymentSelectionState> pageStateNotifier;
-  final Function(bool isInstallment, DateTime? paymentDate, DateTime? installmentDate, String installmentCount) onDataChanged;
+  final Function(bool isInstallment, DateTime? paymentDate, DateTime? installmentDate, String installmentCount) onDataChangedForExpense;
+  final Function(DateTime? paymentDate) onDataChangedForIncome;
 
-  const PaymentSelector({super.key, required this.pageStateNotifier, required this.onDataChanged});
+  const PaymentSelectorWidget(
+      {super.key, required this.pageStateNotifier, required this.onDataChangedForExpense, required this.onDataChangedForIncome, required this.categoryType});
 
   @override
-  State<PaymentSelector> createState() => _PaymentSelectorState();
+  State<PaymentSelectorWidget> createState() => _PaymentSelectorWidgetState();
 }
 
-class _PaymentSelectorState extends State<PaymentSelector> {
+class _PaymentSelectorWidgetState extends State<PaymentSelectorWidget> {
   bool isInstallment = false;
   double _opacity = 1.0;
   PaymentSelectionState _currentState = PaymentSelectionState.expense;
@@ -64,15 +69,19 @@ class _PaymentSelectorState extends State<PaymentSelector> {
       case PaymentSelectionState.expense:
         return ExpenseWidget(
           onDataChanged: (isInstallment, paymentDate, installmentDate, installmentCount) {
-            widget.onDataChanged(isInstallment, paymentDate, installmentDate, installmentCount);
+            widget.onDataChangedForExpense(isInstallment, paymentDate, installmentDate, installmentCount);
           },
         );
       case PaymentSelectionState.income:
-        return const Center(child: Text('Income Page'));
+        return IncomeWidget(
+          categoryType: widget.categoryType,
+          onDataChanged: (paymentDate) {
+            widget.onDataChangedForIncome(paymentDate);
+          },
+        );
       case PaymentSelectionState.transfer:
-        return const Center(child: Text('Transfer Page'));
       default:
-        return const Center(child: Text('Unknown Page'));
+        return const SizedBox();
     }
   }
 }

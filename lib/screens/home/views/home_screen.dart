@@ -5,8 +5,8 @@ import 'package:flutter_application/screens/add_transaction/views/add_transactio
 import 'package:flutter_application/screens/home/views/main_screen.dart';
 import 'package:flutter_application/screens/stats/stats_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
+import '../../../blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import '../../../blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
 import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
 
@@ -71,55 +71,46 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-      floatingActionButton: SpeedDial(
-        animatedIcon: AnimatedIcons.menu_close,
-        animatedIconTheme: const IconThemeData(size: 22.0),
-        children: [
-          SpeedDialChild(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(32),
-            ),
-            child: const Icon(CupertinoIcons.money_dollar_circle),
-            label: 'Gider Ekle',
-            backgroundColor: theme.scaffoldBackgroundColor,
-            labelBackgroundColor: theme.scaffoldBackgroundColor,
-            onTap: () async {
-              await Navigator.of(context)
-                  .push(
-                MaterialPageRoute(
-                  builder: (context) => MultiBlocProvider(
-                    providers: [
-                      BlocProvider(
-                        create: (context) => GetAllTransactionBloc(FirebaseTransactionRepository()),
-                      ),
-                      BlocProvider(
-                        create: (context) => GetUserTransactionsBloc(FirebaseTransactionRepository()),
-                      ),
-                    ],
-                    child: const AddTransactionPage(),
+      floatingActionButton: InkWell(
+        onTap: () async {
+          await Navigator.of(context)
+              .push(
+            MaterialPageRoute(
+              builder: (context) => MultiBlocProvider(
+                providers: [
+                  BlocProvider(
+                    create: (context) => GetAllTransactionBloc(FirebaseTransactionRepository()),
                   ),
-                ),
-              )
-                  .then((_) {
-                if (context.mounted) {
-                  final transactionsBloc = context.read<GetUserTransactionsBloc>();
-                  transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
-                  context.read<GetAllTransactionBloc>().add(FetchAllTransactions());
-                }
-              });
-            },
-          ),
-          SpeedDialChild(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(32),
+                  BlocProvider(
+                    create: (context) => GetUserTransactionsBloc(FirebaseTransactionRepository()),
+                  ),
+                  BlocProvider(
+                    create: (context) => CreateTransactionBloc(FirebaseTransactionRepository()),
+                  ),
+                ],
+                child: const AddTransactionPage(),
+              ),
             ),
-            child: const Icon(CupertinoIcons.money_dollar_circle_fill),
-            label: 'Gelir Ekle',
-            backgroundColor: theme.scaffoldBackgroundColor,
-            labelBackgroundColor: theme.scaffoldBackgroundColor,
-            onTap: () async {},
+          )
+              .then((_) {
+            if (context.mounted) {
+              final transactionsBloc = context.read<GetUserTransactionsBloc>();
+              transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+              context.read<GetAllTransactionBloc>().add(FetchAllTransactions());
+            }
+          });
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: theme.primaryColor,
           ),
-        ],
+          padding: const EdgeInsets.all(15),
+          child: const Icon(
+            CupertinoIcons.add,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }

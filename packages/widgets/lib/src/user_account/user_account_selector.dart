@@ -34,12 +34,12 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
           _opacity = 0.0;
           _currentState = widget.pageStateNotifier.value;
         });
-        Future.delayed(const Duration(milliseconds: 300), () {
+        await Future.delayed(const Duration(milliseconds: 310), () {
           setState(() {
             _showTransferAccount = true;
           });
         });
-        await Future.delayed(const Duration(milliseconds: 300), () {
+        await Future.delayed(const Duration(milliseconds: 310), () {
           setState(() {
             _opacity = 1.0;
           });

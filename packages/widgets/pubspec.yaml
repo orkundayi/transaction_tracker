@@ -14,6 +14,7 @@ dependencies:
   firebase_repository:
     path: ../firebase_repository
   font_awesome_flutter: ^10.7.0
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
