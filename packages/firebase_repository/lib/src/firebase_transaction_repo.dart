@@ -12,6 +12,7 @@ class FirebaseTransactionRepository implements TransactionRepository {
     try {
       final transactionId = transactionCollection.doc().id;
       transaction.id = transactionId;
+      transaction.userId = getCurrenUser()?.uid ?? 'testUser';
       await transactionCollection.doc(transactionId).set(transaction.toMap());
     } catch (e) {
       log('Transaction addition failed: $e');
@@ -21,6 +22,7 @@ class FirebaseTransactionRepository implements TransactionRepository {
   @override
   Future<void> removeTransaction(TransactionModel transaction) async {
     try {
+      transaction.userId = getCurrenUser()?.uid ?? 'testUser';
       await transactionCollection.doc(transaction.id).delete();
     } catch (e) {
       log('Transaction deletion failed: $e');
@@ -30,6 +32,7 @@ class FirebaseTransactionRepository implements TransactionRepository {
   @override
   Future<void> updateTransaction(TransactionModel transaction) async {
     try {
+      transaction.userId = getCurrenUser()?.uid ?? 'testUser';
       await transactionCollection.doc(transaction.id).update(transaction.toMap());
     } catch (e) {
       log('Transaction update failed: $e');
@@ -39,7 +42,7 @@ class FirebaseTransactionRepository implements TransactionRepository {
   @override
   Future<List<TransactionModel>> fetchTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate}) {
     return transactionCollection
-        .where('userId', isEqualTo: getCurrenUser()?.uid ?? '')
+        .where('userId', isEqualTo: getCurrenUser()?.uid ?? 'testUser')
         .where('type', isEqualTo: type.name)
         .where('date', isGreaterThanOrEqualTo: firstDate != null ? Timestamp.fromDate(firstDate) : null)
         .where('date', isLessThanOrEqualTo: lastDate != null ? Timestamp.fromDate(lastDate) : null)
@@ -57,7 +60,7 @@ class FirebaseTransactionRepository implements TransactionRepository {
   @override
   Future<List<TransactionModel>> fetchLastTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate}) {
     return transactionCollection
-        .where('userId', isEqualTo: getCurrenUser()?.uid ?? '')
+        .where('userId', isEqualTo: getCurrenUser()?.uid ?? 'testUser')
         .where('type', isEqualTo: type.name)
         .where('date', isGreaterThanOrEqualTo: firstDate != null ? Timestamp.fromDate(firstDate) : null)
         .where('date', isLessThanOrEqualTo: lastDate != null ? Timestamp.fromDate(lastDate) : null)
@@ -79,7 +82,7 @@ class FirebaseTransactionRepository implements TransactionRepository {
     final firstDateOfThisMonth = DateTime(todayLocal.year, todayLocal.month, 1);
     final lastDateOfThisMonth = DateTime(todayLocal.year, todayLocal.month + 1, 0, 23, 59, 59);
     return transactionCollection
-        .where('userId', isEqualTo: getCurrenUser()?.uid ?? '')
+        .where('userId', isEqualTo: getCurrenUser()?.uid ?? 'testUser')
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(firstDateOfThisMonth))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(lastDateOfThisMonth))
         .orderBy(

@@ -72,7 +72,7 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
-      height: _currentState == PaymentSelectionState.transfer ? 136 : 72,
+      height: _currentState == PaymentSelectionState.transfer ? 130 : 69,
       width: MediaQuery.of(context).size.width * 0.95,
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -91,69 +91,74 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
             onTap: () async {
               widget.onAccountSelected?.call();
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                color: Theme.of(context).scaffoldBackgroundColor,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    children: [
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          height: 48,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 20,
-                                offset: Offset(0, 10),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.95,
+                height: 56,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Row(
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            height: 48,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 20,
+                                  offset: Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                FontAwesomeIcons.moneyBillWave,
+                                size: 20,
                               ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              FontAwesomeIcons.moneyBillWave,
-                              size: 20,
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Hesap',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Hesap',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        widget.selectedAccount?.code ?? 'Hesap Seçin',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          widget.selectedAccount?.code ?? 'Hesap Seçin',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_ios, size: 16),
-                      const SizedBox(width: 8),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -165,22 +170,24 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
                 onTap: () async {
                   widget.onTransferAccountSelected?.call();
                 },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  margin: const EdgeInsets.only(top: 0, left: 8, right: 8, bottom: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Container(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.95,
+                    height: 56,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: const EdgeInsets.only(top: 0, left: 8, right: 8, bottom: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               height: 48,
                               decoration: const BoxDecoration(
@@ -201,33 +208,33 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Aktarılacak Hesap',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Aktarılacak Hesap',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                            widget.selectedTransferAccount?.code ?? 'Hesap Seçin',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              widget.selectedTransferAccount?.code ?? 'Hesap Seçin',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_ios, size: 16),
-                          const SizedBox(width: 8),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward_ios, size: 16),
+                            const SizedBox(width: 8),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

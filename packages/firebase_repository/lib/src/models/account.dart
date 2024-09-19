@@ -25,7 +25,7 @@ class AccountModel {
     return AccountModel(
       code: json['code'] as String,
       name: json['name'] as String,
-      balance: json['balance'] as double,
+      balance: double.tryParse(json['balance'].toString()) as double,
     );
   }
 

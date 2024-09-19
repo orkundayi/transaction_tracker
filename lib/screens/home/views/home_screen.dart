@@ -1,6 +1,7 @@
 import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application/blocs/update_user_account/update_user_account_bloc.dart';
 import 'package:flutter_application/screens/add_transaction/views/add_transaction.dart';
 import 'package:flutter_application/screens/home/views/main_screen.dart';
 import 'package:flutter_application/screens/stats/stats_screen.dart';
@@ -79,13 +80,10 @@ class _HomeScreenState extends State<HomeScreen> {
               builder: (context) => MultiBlocProvider(
                 providers: [
                   BlocProvider(
-                    create: (context) => GetAllTransactionBloc(FirebaseTransactionRepository()),
-                  ),
-                  BlocProvider(
-                    create: (context) => GetUserTransactionsBloc(FirebaseTransactionRepository()),
-                  ),
-                  BlocProvider(
                     create: (context) => CreateTransactionBloc(FirebaseTransactionRepository()),
+                  ),
+                  BlocProvider(
+                    create: (context) => UpdateUserAccountBloc(FirebaseAccountRepository()),
                   ),
                 ],
                 child: const AddTransactionPage(),

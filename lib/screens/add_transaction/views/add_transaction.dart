@@ -1,13 +1,16 @@
 import 'dart:developer';
 
 import 'package:firebase_repository/firebase_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:widgets/widgets.dart';
 
 import '../../../blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import '../../../blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
+import '../../../blocs/update_user_account/update_user_account_bloc.dart';
 import 'user_account_selector/user_account_selector.dart';
 
 class AddTransactionPage extends StatefulWidget {
@@ -18,12 +21,14 @@ class AddTransactionPage extends StatefulWidget {
 }
 
 class _AddPaymentSelectionState extends State<AddTransactionPage> {
+  final GlobalKey<CategorySelectorWidgetState> categoryKey = GlobalKey<CategorySelectorWidgetState>();
+  final ValueListenable<bool> _isExchangeRateEnabled = ValueNotifier<bool>(false);
   final TextEditingController _currencyController = TextEditingController();
-
+  final TextEditingController _exchangeRateController = TextEditingController();
   final ValueNotifier<PaymentSelectionState> _pageStateNotifier = ValueNotifier<PaymentSelectionState>(PaymentSelectionState.expense);
 
   String _currentIcon = '₺';
-  String _currentCurrency = 'TR';
+  String _currentCurrencyCode = 'TR';
 
   bool isInstallment = false;
   DateTime? installmentDate;
@@ -40,11 +45,58 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
     await getCurrencyList();
   }
 
+  Future<void> compareCurrencyCodesAndCalculateExchangeRate({AccountModel? transferAccount}) async {
+    var currentCurrency = _currentCurrencyCode;
+    var toCurrency = transferAccount?.code ?? selectedAccount!.code;
+
+    http.Response response = await getCurrencies();
+    if (response.statusCode == 200) {
+      CurrencyRates currencyRates = parseCurrencyFromResponse(response.body);
+      List<CurrencyModel> currencyList = currencyRates.currencies;
+      CurrencyModel currentCurrencyModel = currencyList.firstWhere((element) => element.currencyCode == currentCurrency);
+      CurrencyModel toCurrencyModel = currencyList.firstWhere((element) => element.currencyCode == toCurrency);
+      calculateExchangeRate(currentCurrencyModel.forexSelling, toCurrencyModel.forexSelling);
+    }
+  }
+
+  void calculateExchangeRate(double? forexSelling, double? toForexSelling) {
+    if (forexSelling != null && toForexSelling != null) {
+      double exchangeRate = forexSelling / toForexSelling;
+      _exchangeRateController.text = exchangeRate.toString();
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Kur Bilgisi Bulunurken Hata'),
+            content: const Text('Kur değerini girmeniz gerekmektedir.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  (_isExchangeRateEnabled as ValueNotifier<bool>).value = true;
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Tamam'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kayıt Ekle'),
+        title: const Text(
+          'Kayıt Ekle',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,
       ),
@@ -139,6 +191,16 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                               child: InkWell(
                                 onTap: () {
                                   setState(() {
+                                    if (_pageStateNotifier.value != PaymentSelectionState.expense) {
+                                      setState(() {
+                                        _categoryController.text = 'Kategori Seçin';
+                                        categoryType = CategoryType.otherExpense;
+                                        categoryKey.currentState?.clearDataAccordingToPaymentSelectionState();
+                                        if (_pageStateNotifier.value == PaymentSelectionState.transfer && _currentCurrencyCode.isNotEmpty && selectedAccount != null) {
+                                          compareCurrencyCodesAndCalculateExchangeRate();
+                                        }
+                                      });
+                                    }
                                     _pageStateNotifier.value = PaymentSelectionState.expense;
                                   });
                                 },
@@ -149,6 +211,16 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                               child: InkWell(
                                 onTap: () {
                                   setState(() {
+                                    if (_pageStateNotifier.value != PaymentSelectionState.income) {
+                                      setState(() {
+                                        _categoryController.text = 'Kategori Seçin';
+                                        categoryType = CategoryType.otherIncome;
+                                        categoryKey.currentState?.clearDataAccordingToPaymentSelectionState();
+                                        if (_pageStateNotifier.value == PaymentSelectionState.transfer && _currentCurrencyCode.isNotEmpty && selectedAccount != null) {
+                                          compareCurrencyCodesAndCalculateExchangeRate();
+                                        }
+                                      });
+                                    }
                                     _pageStateNotifier.value = PaymentSelectionState.income;
                                   });
                                 },
@@ -160,6 +232,15 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                                 onTap: () {
                                   setState(() {
                                     _pageStateNotifier.value = PaymentSelectionState.transfer;
+                                    selectedAccount != null ? _currentCurrencyCode = selectedAccount!.code : _currentCurrencyCode = 'TR';
+                                    _currentIcon = selectedAccount != null
+                                        ? getCurrencySymbolFromCurrencyCode(
+                                            selectedAccount!.code,
+                                          )
+                                        : '₺';
+                                    if (_currentCurrencyCode.isNotEmpty && selectedAccount != null) {
+                                      compareCurrencyCodesAndCalculateExchangeRate(transferAccount: selectedTransferAccount);
+                                    }
                                   });
                                 },
                                 child: const SizedBox(height: 36),
@@ -171,6 +252,47 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                     ),
                     const SizedBox(height: 10),
                     currencyTextFormField(),
+                    const SizedBox(height: 10),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _isExchangeRateEnabled,
+                      builder: (context, isEnabled, child) {
+                        return GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Kur Değiştir'),
+                                  content: const Text('Kur değerini değiştirmek istediğinize emin misiniz?'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: const Text('İptal'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                        (_isExchangeRateEnabled as ValueNotifier<bool>).value = !(_isExchangeRateEnabled).value;
+                                      },
+                                      child: const Text('Evet'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          child: AbsorbPointer(
+                            absorbing: !isEnabled,
+                            child: Opacity(
+                              opacity: isEnabled ? 1.0 : 0.5,
+                              child: exchangeRateTextFormField(),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -193,6 +315,16 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                 if (account != null) {
                   setState(() {
                     selectedAccount = account;
+                    if (_pageStateNotifier.value != PaymentSelectionState.transfer && _currentCurrencyCode.isNotEmpty) {
+                      compareCurrencyCodesAndCalculateExchangeRate();
+                    }
+                    if (_pageStateNotifier.value == PaymentSelectionState.transfer) {
+                      _currentCurrencyCode = selectedAccount!.code;
+                      _currentIcon = getCurrencySymbolFromCurrencyCode(selectedAccount!.code);
+                      if (_currentCurrencyCode.isNotEmpty && selectedTransferAccount != null) {
+                        compareCurrencyCodesAndCalculateExchangeRate(transferAccount: selectedTransferAccount);
+                      }
+                    }
                   });
                 }
               },
@@ -211,6 +343,9 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                 if (account != null) {
                   setState(() {
                     selectedTransferAccount = account;
+                    if (_currentCurrencyCode.isNotEmpty && selectedAccount != null) {
+                      compareCurrencyCodesAndCalculateExchangeRate(transferAccount: selectedTransferAccount);
+                    }
                   });
                 }
               },
@@ -226,6 +361,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
               },
               child: _pageStateNotifier.value != PaymentSelectionState.transfer
                   ? CategorySelectorWidget(
+                      paymentSelectionState: _pageStateNotifier.value,
                       onDataChanged: (categoryName, categoryType) {
                         this.categoryType = categoryType;
                         _categoryController.text = categoryName;
@@ -233,6 +369,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                         log('Category Name: $categoryName');
                         log('Category Type: $categoryType');
                       },
+                      categoryKey: categoryKey,
                     )
                   : const SizedBox(),
             ),
@@ -281,16 +418,17 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
             try {
               final TransactionModel transaction = TransactionModel.empty();
               transaction.amount = double.parse(_currencyController.text);
-              transaction.currencyCode = _currentCurrency;
+              transaction.currencyCode = _currentCurrencyCode;
               transaction.category = CategoryModel.empty(CategoryType.otherExpense);
               transaction.category!.name = _categoryController.text == 'Kategori Seçin' ? 'Diğer' : _categoryController.text;
               transaction.category!.type = categoryType;
               await transactionCalculate(transaction);
-              debugPrint(transaction.toString());
               if (context.mounted) {
                 context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
               }
-              if (context.mounted) {}
+              if (context.mounted) {
+                context.read<UpdateUserAccountBloc>().add(UpdateUserAccountEvent(transaction: transaction));
+              }
             } catch (e) {
               log(e.toString());
             } finally {
@@ -371,8 +509,11 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
         );
         if (result != null) {
           setState(() {
-            _currentCurrency = result['currencyCode'];
+            _currentCurrencyCode = result['currencyCode'];
             _currentIcon = result['currencySymbol'];
+            if (selectedAccount != null) {
+              compareCurrencyCodesAndCalculateExchangeRate();
+            }
           });
         }
       }
@@ -402,60 +543,49 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
           fillColor: Colors.white,
           filled: true,
           prefixIcon: GestureDetector(
-            onTap: _toggleCurrency,
+            onTap: _pageStateNotifier.value != PaymentSelectionState.transfer ? _toggleCurrency : null,
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              child: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: AnimatedContainer(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                  ),
+                  height: 36,
+                  margin: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _getContainerColor(),
+                      width: 2,
+                    ),
+                    color: _getContainerColor().withOpacity(0.05),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 20,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                      ),
-                      height: 36,
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _getContainerColor(),
-                          width: 2,
-                        ),
-                        color: _getContainerColor().withOpacity(0.05),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 20,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          _currentIcon,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w400,
-                          ),
+                      opacity: _pageStateNotifier.value == PaymentSelectionState.transfer ? 0.5 : 1,
+                      child: Text(
+                        _currentIcon.length < 2 ? '$_currentIcon ' : _currentIcon,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
                         ),
                       ),
                     ),
                   ),
-                  const Positioned(
-                    top: 0,
-                    right: 4,
-                    child: Text(
-                      '*',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -467,6 +597,75 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
           border: const OutlineInputBorder(
             borderSide: BorderSide.none,
             borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget exchangeRateTextFormField() {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width * 0.95,
+      child: TextFormField(
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 18,
+        ),
+        controller: _exchangeRateController,
+        onChanged: (value) {
+          checkIfValueIsNumeric(value);
+        },
+        keyboardType: TextInputType.number,
+        textAlignVertical: TextAlignVertical.center,
+        decoration: InputDecoration(
+          fillColor: Colors.white,
+          filled: true,
+          hintText: ' Kur Değeri',
+          hintStyle: const TextStyle(
+            color: Colors.black,
+          ),
+          hintTextDirection: TextDirection.ltr,
+          border: const OutlineInputBorder(
+            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+          prefixIcon: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: GestureDetector(
+                onTap: () => (_isExchangeRateEnabled as ValueNotifier<bool>).value = !(_isExchangeRateEnabled).value,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                  ),
+                  height: 36,
+                  margin: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: _getContainerColor(),
+                      width: 2,
+                    ),
+                    shape: BoxShape.circle,
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 20,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      FontAwesomeIcons.arrowRightArrowLeft,
+                      size: 16,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -486,15 +685,21 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   transactionCalculate(TransactionModel transaction) async {
     switch (_pageStateNotifier.value) {
       case PaymentSelectionState.expense:
-        if (installmentCount != null && installmentDate != null) {
-          await transactionCalculateForExpense(transaction);
-        }
+        await transactionCalculateForExpense(transaction);
+
         break;
       case PaymentSelectionState.income:
         await transactionCalculateForIncome(transaction);
+
         break;
       case PaymentSelectionState.transfer:
-        // TODO: Handle for transfer case.
+        transaction.type = TransactionType.transfer;
+        transaction.currencyCode = _currentCurrencyCode;
+        transaction.toCurrencyCode = selectedTransferAccount!.code;
+        transaction.date = DateTime.now().toLocal();
+        transaction.currencyRate = double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
+        transaction.amount = double.parse(_currencyController.text);
+        transaction.calculatedAmount = double.parse(_currencyController.text) * transaction.currencyRate!;
         break;
       default:
     }
@@ -503,40 +708,44 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   // Expense
   Future<void> transactionCalculateForExpense(TransactionModel transaction) async {
     if (isInstallment) {
-      transaction.installments = await createInstallments();
+      if (installmentCount != null && installmentDate != null) {
+        transaction.installments = await createInstallments();
+      }
     } else {
       transaction.date = paymentDate!;
+      transaction.currencyRate = double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
+      transaction.calculatedAmount = double.parse(_currencyController.text) * transaction.currencyRate!;
     }
     transaction.type = TransactionType.expense;
+    transaction.currencyCode = _currentCurrencyCode;
+    transaction.toCurrencyCode = selectedAccount!.code;
   }
 
   Future<List<InstallmentModel>?> createInstallments() async {
     CurrencyModel currency = CurrencyModel.empty();
-    currency.currencyCode = _currentCurrency;
-    currency.kod = _currentCurrency;
-
-    final selectedCurrency = await getCurrencies().then((value) async {
-      final currencies = parseCurrencyFromResponse(value.body);
-      return currencies.currencies.firstWhere((c) => c.currencyCode == _currentCurrency, orElse: () => currency);
-    });
-
+    CurrencyModel toCurrency = CurrencyModel.empty();
+    currency.currencyCode = _currentCurrencyCode;
+    currency.kod = _currentCurrencyCode;
+    toCurrency.currencyCode = selectedAccount!.code;
+    toCurrency.kod = selectedAccount!.code;
     if (installmentCount != null && installmentDate != null) {
+      var amount = double.parse(_currencyController.text) / installmentCount!;
+      double exchangeRate = double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
       List<InstallmentModel> installments = [];
       for (int i = 0; i < installmentCount!; i++) {
         installments.add(
           InstallmentModel(
             installmentNumber: i + 1,
-            amount: double.parse(_currencyController.text) / installmentCount!,
+            amount: amount,
             dueDate: DateTime(
               installmentDate!.year,
               installmentDate!.month + i,
               installmentDate!.day,
             ),
-            calculatedAmount: calculateRelateToCurrency(
-              double.parse(_currencyController.text) / installmentCount!,
-              selectedCurrency,
-            ),
+            currencyRate: double.parse(_exchangeRateController.text),
+            calculatedAmount: amount * exchangeRate,
             currency: currency,
+            toCurrency: toCurrency,
           ),
         );
       }
@@ -545,26 +754,14 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
     return null;
   }
 
-  double calculateRelateToCurrency(double amount, CurrencyModel selectedCurrency) {
-    if (selectedCurrency.currencyCode != 'TR' && selectedCurrency.forexBuying != null) {
-      return amount * selectedCurrency.forexBuying!;
-    }
-    return 0.0;
-  }
-
   // Income
   Future<void> transactionCalculateForIncome(TransactionModel transaction) async {
-    CurrencyModel currency = CurrencyModel.empty();
-    currency.currencyCode = _currentCurrency;
-    currency.kod = _currentCurrency;
+    double exchangeRate = double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
     transaction.date = paymentDate!;
     transaction.type = TransactionType.income;
-    final selectedCurrency = await getCurrencies().then((value) async {
-      final currencies = parseCurrencyFromResponse(value.body);
-      return currencies.currencies.firstWhere((c) => c.currencyCode == _currentCurrency, orElse: () => currency);
-    });
-    if (selectedCurrency.currencyCode != 'TR' && selectedCurrency.forexBuying != null) {
-      transaction.calculatedAmount = transaction.amount * selectedCurrency.forexBuying!;
-    }
+    transaction.currencyRate = exchangeRate;
+    transaction.calculatedAmount = double.parse(_currencyController.text) * exchangeRate;
+    transaction.currencyCode = _currentCurrencyCode;
+    transaction.toCurrencyCode = selectedAccount!.code;
   }
 }

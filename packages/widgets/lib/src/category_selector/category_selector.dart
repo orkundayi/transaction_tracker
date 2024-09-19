@@ -1,18 +1,37 @@
 import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:widgets/src/payment_selector/payment_selector.dart';
 
 class CategorySelectorWidget extends StatefulWidget {
+  final PaymentSelectionState paymentSelectionState;
+  final GlobalKey<CategorySelectorWidgetState> categoryKey;
   final Function(String category, CategoryType? categoryType) onDataChanged;
-  const CategorySelectorWidget({super.key, required this.onDataChanged});
+
+  const CategorySelectorWidget({required this.onDataChanged, required this.paymentSelectionState, required this.categoryKey}) : super(key: categoryKey);
+
+  void clearData() {
+    categoryKey.currentState?.clearDataAccordingToPaymentSelectionState();
+  }
 
   @override
-  State<CategorySelectorWidget> createState() => _CategorySelectorWidgetState();
+  State<CategorySelectorWidget> createState() => CategorySelectorWidgetState();
 }
 
-class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
+class CategorySelectorWidgetState extends State<CategorySelectorWidget> {
   CategoryType? categoryType = CategoryType.otherExpense;
   final TextEditingController _categoryController = TextEditingController(text: 'Kategori Seçin');
 
+  void clearDataAccordingToPaymentSelectionState() {
+    if (widget.paymentSelectionState == PaymentSelectionState.expense) {
+      categoryType = CategoryType.otherExpense;
+    } else {
+      categoryType = CategoryType.otherIncome;
+    }
+    _categoryController.text = 'Kategori Seçin';
+    setState(() {});
+  }
+
+  @override
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -42,10 +61,11 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
                     Expanded(
                       child: ListView.builder(
                         shrinkWrap: true,
-                        itemCount: CategoryModel.expenseCategoryTypeCount,
+                        itemCount: widget.paymentSelectionState == PaymentSelectionState.expense ? CategoryModel.expenseCategoryTypeCount : CategoryModel.incomeCategoryTypeCount,
                         padding: const EdgeInsets.all(8),
                         itemBuilder: (context, index) {
-                          CategoryType categoryType = CategoryModel.expenseCategoryTypes[index];
+                          CategoryType categoryType =
+                              widget.paymentSelectionState == PaymentSelectionState.expense ? CategoryModel.expenseCategoryTypes[index] : CategoryModel.incomeCategoryTypes[index];
                           return ListTile(
                             title: Text(
                               getCategoryName(categoryType),
