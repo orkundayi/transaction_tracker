@@ -72,10 +72,10 @@ class FirebaseAccountRepository implements AccountRepository {
       UserModel user = UserModel.fromMap(userAccount.data()!);
       switch (transaction.type) {
         case TransactionType.income:
-          user.accounts.firstWhereOrNull((element) => element.code == transaction.currencyCode)?.balance += transaction.amount;
+          user.accounts.firstWhereOrNull((element) => element.code == transaction.toCurrencyCode)?.balance += transaction.calculatedAmount!;
           break;
         case TransactionType.expense:
-          user.accounts.firstWhereOrNull((element) => element.code == transaction.currencyCode)?.balance -= transaction.amount;
+          user.accounts.firstWhereOrNull((element) => element.code == transaction.toCurrencyCode)?.balance -= transaction.calculatedAmount!;
           break;
         case TransactionType.transfer:
           user.accounts.firstWhereOrNull((element) => element.code == transaction.currencyCode)?.balance -= transaction.amount;

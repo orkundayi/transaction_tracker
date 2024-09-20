@@ -43,6 +43,13 @@ class CategorySelectorWidgetState extends State<CategorySelectorWidget> {
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             context: context,
             isScrollControlled: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+            ),
+            showDragHandle: true,
+            enableDrag: false,
             builder: (context) {
               return FractionallySizedBox(
                 heightFactor: 0.8,

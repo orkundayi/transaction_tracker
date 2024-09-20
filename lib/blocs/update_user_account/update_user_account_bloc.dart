@@ -7,14 +7,16 @@ part 'update_user_account_state.dart';
 
 class UpdateUserAccountBloc extends Bloc<UpdateUserAccountEvent, UpdateUserAccountState> {
   final AccountRepository accountRepository;
+
   UpdateUserAccountBloc(this.accountRepository) : super(UpdateUserAccountInitial()) {
-    on<UpdateUserAccountEvent>((event, emit) {
+    on<UpdateUserAccountEvent>((event, emit) async {
       emit(UpdateUserAccountLoading());
-      accountRepository.updateUserAccount(event.transaction).then((_) {
+      try {
+        await accountRepository.updateUserAccount(event.transaction);
         emit(UpdateUserAccountSuccess());
-      }).catchError((e) {
+      } catch (e) {
         emit(UpdateUserAccountError(e));
-      });
+      }
     });
   }
 }

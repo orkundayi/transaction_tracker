@@ -26,6 +26,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   final TextEditingController _currencyController = TextEditingController();
   final TextEditingController _exchangeRateController = TextEditingController();
   final ValueNotifier<PaymentSelectionState> _pageStateNotifier = ValueNotifier<PaymentSelectionState>(PaymentSelectionState.expense);
+  TransactionModel transaction = TransactionModel.empty();
+  CurrencyRates? currencyRates;
 
   String _currentIcon = '₺';
   String _currentCurrencyCode = 'TR';
@@ -41,47 +43,18 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   CategoryType? categoryType = CategoryType.otherExpense;
   final TextEditingController _categoryController = TextEditingController(text: 'Kategori Seçin');
 
-  void _toggleCurrency() async {
-    await getCurrencyList();
+  @override
+  void initState() {
+    getCurrencyRates();
+    super.initState();
   }
 
-  Future<void> compareCurrencyCodesAndCalculateExchangeRate({AccountModel? transferAccount}) async {
-    var currentCurrency = _currentCurrencyCode;
-    var toCurrency = transferAccount?.code ?? selectedAccount!.code;
-
+  Future<void> getCurrencyRates() async {
     http.Response response = await getCurrencies();
     if (response.statusCode == 200) {
-      CurrencyRates currencyRates = parseCurrencyFromResponse(response.body);
-      List<CurrencyModel> currencyList = currencyRates.currencies;
-      CurrencyModel currentCurrencyModel = currencyList.firstWhere((element) => element.currencyCode == currentCurrency);
-      CurrencyModel toCurrencyModel = currencyList.firstWhere((element) => element.currencyCode == toCurrency);
-      calculateExchangeRate(currentCurrencyModel.forexSelling, toCurrencyModel.forexSelling);
-    }
-  }
-
-  void calculateExchangeRate(double? forexSelling, double? toForexSelling) {
-    if (forexSelling != null && toForexSelling != null) {
-      double exchangeRate = forexSelling / toForexSelling;
-      _exchangeRateController.text = exchangeRate.toString();
+      currencyRates = parseCurrencyFromResponse(response.body);
     } else {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Kur Bilgisi Bulunurken Hata'),
-            content: const Text('Kur değerini girmeniz gerekmektedir.'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  (_isExchangeRateEnabled as ValueNotifier<bool>).value = true;
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Tamam'),
-              ),
-            ],
-          );
-        },
-      );
+      log('Failed to load currency rates');
     }
   }
 
@@ -232,6 +205,9 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                                 onTap: () {
                                   setState(() {
                                     _pageStateNotifier.value = PaymentSelectionState.transfer;
+                                    _exchangeRateController.text = '';
+                                    selectedAccount = null;
+                                    selectedTransferAccount = null;
                                     selectedAccount != null ? _currentCurrencyCode = selectedAccount!.code : _currentCurrencyCode = 'TR';
                                     _currentIcon = selectedAccount != null
                                         ? getCurrencySymbolFromCurrencyCode(
@@ -394,6 +370,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                 log('Payment Date: ${this.paymentDate}');
               },
             ),
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -416,7 +393,6 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
         child: TextButton(
           onPressed: () async {
             try {
-              final TransactionModel transaction = TransactionModel.empty();
               transaction.amount = double.parse(_currencyController.text);
               transaction.currencyCode = _currentCurrencyCode;
               transaction.category = CategoryModel.empty(CategoryType.otherExpense);
@@ -486,36 +462,35 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   }
 
   Future<void> getCurrencyList() async {
-    http.Response response = await getCurrencies();
-
-    if (response.statusCode == 200) {
-      var currencies = parseCurrencyFromResponse(response.body);
-      currencies.currencies.sort((a, b) => a.orderNo.compareTo(b.orderNo));
-      if (mounted) {
-        final result = await showModalBottomSheet(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          context: context,
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(24),
-            ),
+    if (currencyRates == null) {
+      await getCurrencyRates();
+      return;
+    }
+    currencyRates!.currencies.sort((a, b) => a.orderNo.compareTo(b.orderNo));
+    if (mounted) {
+      final result = await showModalBottomSheet(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(24),
           ),
-          showDragHandle: true,
-          enableDrag: false,
-          builder: (context) {
-            return CurrencySelector(allCurrencies: currencies.currencies);
-          },
-        );
-        if (result != null) {
-          setState(() {
-            _currentCurrencyCode = result['currencyCode'];
-            _currentIcon = result['currencySymbol'];
-            if (selectedAccount != null) {
-              compareCurrencyCodesAndCalculateExchangeRate();
-            }
-          });
-        }
+        ),
+        showDragHandle: true,
+        enableDrag: false,
+        builder: (context) {
+          return CurrencySelector(allCurrencies: currencyRates!.currencies);
+        },
+      );
+      if (result != null) {
+        setState(() {
+          _currentCurrencyCode = result['currencyCode'];
+          _currentIcon = result['currencySymbol'];
+          if (selectedAccount != null) {
+            compareCurrencyCodesAndCalculateExchangeRate();
+          }
+        });
       }
     }
   }
@@ -528,77 +503,95 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   Widget currencyTextFormField() {
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.95,
-      child: TextFormField(
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 18,
-        ),
-        controller: _currencyController,
-        onChanged: (value) {
-          checkIfValueIsNumeric(value);
-        },
-        keyboardType: TextInputType.number,
-        textAlignVertical: TextAlignVertical.center,
-        decoration: InputDecoration(
-          fillColor: Colors.white,
-          filled: true,
-          prefixIcon: GestureDetector(
-            onTap: _pageStateNotifier.value != PaymentSelectionState.transfer ? _toggleCurrency : null,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                  ),
-                  height: 36,
-                  margin: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: _getContainerColor(),
-                      width: 2,
-                    ),
-                    color: _getContainerColor().withOpacity(0.05),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 20,
-                        offset: Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: AnimatedOpacity(
+      child: Stack(
+        children: [
+          TextFormField(
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+            ),
+            controller: _currencyController,
+            onChanged: (value) {
+              checkIfValueIsNumeric(value);
+              setState(() {});
+            },
+            keyboardType: TextInputType.number,
+            textAlignVertical: TextAlignVertical.center,
+            decoration: InputDecoration(
+              fillColor: Colors.white,
+              filled: true,
+              prefixIcon: GestureDetector(
+                onTap: _pageStateNotifier.value != PaymentSelectionState.transfer ? _toggleCurrency : null,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      opacity: _pageStateNotifier.value == PaymentSelectionState.transfer ? 0.5 : 1,
-                      child: Text(
-                        _currentIcon.length < 2 ? '$_currentIcon ' : _currentIcon,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.black,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                      ),
+                      height: 36,
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _getContainerColor(),
+                          width: 2,
+                        ),
+                        color: _getContainerColor().withOpacity(0.05),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 300),
+                          opacity: _pageStateNotifier.value == PaymentSelectionState.transfer ? 0.5 : 1,
+                          child: Text(
+                            _currentIcon.length < 2 ? '$_currentIcon ' : _currentIcon,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
+              hintText: ' Tutar Giriniz',
+              hintStyle: const TextStyle(
+                color: Colors.black,
+              ),
+              hintTextDirection: TextDirection.ltr,
+              border: const OutlineInputBorder(
+                borderSide: BorderSide.none,
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+              ),
             ),
           ),
-          hintText: ' Tutar Giriniz',
-          hintStyle: const TextStyle(
-            color: Colors.black,
-          ),
-          hintTextDirection: TextDirection.ltr,
-          border: const OutlineInputBorder(
-            borderSide: BorderSide.none,
-            borderRadius: BorderRadius.all(Radius.circular(20)),
-          ),
-        ),
+          Positioned(
+            right: 20,
+            top: 20,
+            bottom: 20,
+            child: IgnorePointer(
+              ignoring: true,
+              child: Text(
+                _currencyController.text.isNotEmpty
+                    ? '${getCalculatedAmount()?.toStringAsFixed(2) ?? ''} ${_pageStateNotifier.value == PaymentSelectionState.transfer ? selectedTransferAccount?.code ?? '' : selectedAccount?.code ?? ''}'
+                    : '',
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
@@ -763,5 +756,56 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
     transaction.calculatedAmount = double.parse(_currencyController.text) * exchangeRate;
     transaction.currencyCode = _currentCurrencyCode;
     transaction.toCurrencyCode = selectedAccount!.code;
+  }
+
+  void _toggleCurrency() async {
+    await getCurrencyList();
+  }
+
+  Future<void> compareCurrencyCodesAndCalculateExchangeRate({AccountModel? transferAccount}) async {
+    var currentCurrency = _currentCurrencyCode;
+    var toCurrency = transferAccount?.code ?? selectedAccount!.code;
+
+    if (currencyRates == null) {
+      await getCurrencyRates();
+      return;
+    }
+    List<CurrencyModel> currencyList = currencyRates!.currencies;
+    CurrencyModel currentCurrencyModel = currencyList.firstWhere((element) => element.currencyCode == currentCurrency);
+    CurrencyModel toCurrencyModel = currencyList.firstWhere((element) => element.currencyCode == toCurrency);
+    calculateExchangeRate(currentCurrencyModel.forexSelling, toCurrencyModel.forexSelling);
+  }
+
+  void calculateExchangeRate(double? forexSelling, double? toForexSelling) {
+    if (forexSelling != null && toForexSelling != null) {
+      double exchangeRate = forexSelling / toForexSelling;
+      _exchangeRateController.text = exchangeRate.toString();
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Kur Bilgisi Bulunurken Hata'),
+            content: const Text('Kur değerini girmeniz gerekmektedir.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  (_isExchangeRateEnabled as ValueNotifier<bool>).value = true;
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Tamam'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  double? getCalculatedAmount() {
+    if (_currencyController.text.isEmpty || _exchangeRateController.text.isEmpty) {
+      return null;
+    }
+    return double.parse(_currencyController.text) * double.parse(_exchangeRateController.text);
   }
 }
