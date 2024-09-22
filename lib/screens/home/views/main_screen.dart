@@ -21,11 +21,12 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   late GetUserTransactionsBloc transactionsBloc;
   late GetAllTransactionBloc allTransactionsBloc;
-
+  late GetUserAccountsBloc userAccountBloc;
   @override
   void initState() {
     transactionsBloc = context.read<GetUserTransactionsBloc>();
     allTransactionsBloc = context.read<GetAllTransactionBloc>();
+    userAccountBloc = context.read<GetUserAccountsBloc>();
     transactionsBloc.setTransactionMode(TransactionMode.last);
     transactionsBloc.setTransactionType(TransactionType.expense);
     super.initState();
@@ -39,6 +40,7 @@ class _MainScreenState extends State<MainScreen> {
         onRefresh: () async {
           transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
           allTransactionsBloc.add(FetchAllTransactions());
+          userAccountBloc.add(FetchUserAccounts());
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -107,16 +109,8 @@ class _MainScreenState extends State<MainScreen> {
               const SizedBox(height: 10),
               MultiBlocProvider(
                 providers: [
-                  BlocProvider(
-                    create: (context) => GetUserTransactionsBloc(
-                      FirebaseTransactionRepository(),
-                    ),
-                  ),
-                  BlocProvider(
-                    create: (context) => GetUserAccountsBloc(
-                      FirebaseAccountRepository(),
-                    ),
-                  ),
+                  BlocProvider.value(value: transactionsBloc),
+                  BlocProvider.value(value: userAccountBloc),
                 ],
                 child: const TotalBalanceCard(),
               ),

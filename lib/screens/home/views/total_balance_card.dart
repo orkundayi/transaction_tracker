@@ -36,9 +36,9 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
     transactionsBloc = context.read<GetAllTransactionBloc>();
     getUserAccountsBloc = context.read<GetUserAccountsBloc>();
     calculateTotalBalance();
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+    /* _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       calculateTotalBalance();
-    });
+    }); */
     super.initState();
   }
 

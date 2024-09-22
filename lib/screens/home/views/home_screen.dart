@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import '../../../blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
+import '../../../blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
 import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,10 +20,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late GetUserAccountsBloc accountsBloc;
+  late GetUserTransactionsBloc transactionsBloc;
+  late GetAllTransactionBloc allTransactionsBloc;
   @override
   initState() {
     super.initState();
-    final transactionsBloc = context.read<GetUserTransactionsBloc>();
+    transactionsBloc = context.read<GetUserTransactionsBloc>();
+    accountsBloc = context.read<GetUserAccountsBloc>();
+    allTransactionsBloc = context.read<GetAllTransactionBloc>();
     transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
   }
 
@@ -34,9 +40,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: IndexedStack(
         index: index,
-        children: const <Widget>[
-          MainScreen(),
-          StatsScreen(),
+        children: <Widget>[
+          MultiBlocProvider(
+            providers: [
+              BlocProvider.value(value: allTransactionsBloc),
+              BlocProvider.value(value: transactionsBloc),
+              BlocProvider.value(value: accountsBloc),
+            ],
+            child: const MainScreen(),
+          ),
+          const StatsScreen(),
         ],
       ),
       bottomNavigationBar: Padding(
@@ -92,9 +105,11 @@ class _HomeScreenState extends State<HomeScreen> {
           )
               .then((_) {
             if (context.mounted) {
-              final transactionsBloc = context.read<GetUserTransactionsBloc>();
-              transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
-              context.read<GetAllTransactionBloc>().add(FetchAllTransactions());
+              Future.delayed(const Duration(milliseconds: 500), () {
+                transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+                accountsBloc.add(FetchUserAccounts());
+                allTransactionsBloc.add(FetchAllTransactions());
+              });
             }
           });
         },

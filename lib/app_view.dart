@@ -4,6 +4,7 @@ import 'package:flutter_application/screens/home/views/home_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
+import 'blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
 import 'blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
 
 class MyAppView extends StatelessWidget {
@@ -24,6 +25,11 @@ class MyAppView extends StatelessWidget {
           BlocProvider(
             create: (context) => GetAllTransactionBloc(
               FirebaseTransactionRepository(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => GetUserAccountsBloc(
+              FirebaseAccountRepository(),
             ),
           ),
         ],
