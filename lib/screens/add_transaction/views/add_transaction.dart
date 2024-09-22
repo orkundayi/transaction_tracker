@@ -392,6 +392,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: TextButton(
           onPressed: () async {
+            late bool complete;
             try {
               transaction.amount = double.parse(_currencyController.text);
               transaction.currencyCode = _currentCurrencyCode;
@@ -399,6 +400,10 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
               transaction.category!.name = _categoryController.text == 'Kategori Seçin' ? 'Diğer' : _categoryController.text;
               transaction.category!.type = categoryType;
               await transactionCalculate(transaction);
+              complete = await transactionExchangeRateCheck(transaction);
+              if (!complete) {
+                return;
+              }
               if (context.mounted) {
                 context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
               }
@@ -408,7 +413,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
             } catch (e) {
               log(e.toString());
             } finally {
-              if (context.mounted) {
+              if (context.mounted && complete) {
                 Navigator.pop(context);
               }
             }
@@ -808,4 +813,83 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
     }
     return double.parse(_currencyController.text) * double.parse(_exchangeRateController.text);
   }
+
+  Future<bool> transactionExchangeRateCheck(TransactionModel transaction) async {
+    switch (_pageStateNotifier.value) {
+      case PaymentSelectionState.transfer:
+        var correctedValue = calculateCurrencyExchange(transaction.amount, transaction.currencyRate!, transaction.currencyCode, transaction.toCurrencyCode);
+        transaction.amount -= correctedValue['remainingRefund'];
+        transaction.calculatedAmount = double.parse(correctedValue['totalConverted'].toString());
+        bool completed = true;
+        if (correctedValue['remainingRefund'] != 0.0) {
+          completed = await showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Bilgilendirme'),
+                      content: Text(
+                          'Hesabınıza: ${transaction.calculatedAmount?.toStringAsFixed(2)} ${transaction.toCurrencyCode} yatırılacaktır. ${correctedValue['remainingRefund']} ${transaction.currencyCode} iade olacaktır.'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                          },
+                          child: const Text('Tamam'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                          child: const Text('İptal'),
+                        ),
+                      ],
+                    );
+                  }) ??
+              false;
+        }
+        return completed;
+      default:
+        if (transaction.currencyCode != transaction.toCurrencyCode) {
+          var correctedValue = calculateCurrencyExchange(transaction.amount, transaction.currencyRate!, transaction.currencyCode, transaction.toCurrencyCode);
+          transaction.calculatedAmount = double.parse(correctedValue['totalConverted'].toString());
+          bool completed = await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Bilgilendirme'),
+                    content: Text('Hesaplanan Tutar: ${transaction.calculatedAmount?.toStringAsFixed(2)} ${transaction.toCurrencyCode}'),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(true);
+                        },
+                        child: const Text('Tamam'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(false);
+                        },
+                        child: const Text('İptal'),
+                      ),
+                    ],
+                  );
+                },
+              ) ??
+              false;
+          return completed;
+        }
+        return true;
+    }
+  }
+}
+
+Map<String, dynamic> calculateCurrencyExchange(double amount, double exchangeRate, String fromCurrency, String toCurrency) {
+  double totalTargetCurrency = amount * exchangeRate;
+
+  int wholeTargetCurrency = totalTargetCurrency.floor();
+
+  double remainingTargetCurrency = totalTargetCurrency - wholeTargetCurrency;
+  double remainingFromCurrency = (remainingTargetCurrency / exchangeRate).floor().toDouble();
+
+  return {'fromCurrency': fromCurrency, 'toCurrency': toCurrency, 'totalConverted': wholeTargetCurrency, 'remainingRefund': remainingFromCurrency};
 }
