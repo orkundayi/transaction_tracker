@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-      floatingActionButton: InkWell(
+      floatingActionButton: GestureDetector(
         onTap: () async {
           await Navigator.of(context)
               .push(

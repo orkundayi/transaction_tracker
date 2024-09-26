@@ -414,7 +414,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
               log(e.toString());
             } finally {
               if (context.mounted && complete) {
-                Navigator.pop(context);
+                Navigator.pop(context, true);
               }
             }
           },
@@ -585,8 +585,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
           ),
           Positioned(
             right: 20,
-            top: 20,
-            bottom: 20,
+            top: 15,
+            bottom: 15,
             child: IgnorePointer(
               ignoring: true,
               child: Text(

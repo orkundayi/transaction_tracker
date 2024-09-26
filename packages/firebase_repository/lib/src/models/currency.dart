@@ -1,4 +1,5 @@
 // ignore_for_file: deprecated_member_use
+import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
 
 class CurrencyModel {
@@ -246,5 +247,131 @@ String getCurrencySymbolFromCurrencyCode(String code) {
       return '₺';
     default:
       return '';
+  }
+}
+
+Image getCurrencyFlagFromCurrencyCode(String code) {
+  AlignmentGeometry alignment = Alignment.center;
+  BoxFit boxFit = BoxFit.scaleDown;
+  switch (code) {
+    case 'USD':
+    case 'AUD':
+    case 'CAD':
+      return Image.asset(
+        'assets/images/flags/usa.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'DKK':
+    case 'SEK':
+    case 'NOK':
+      return Image.asset(
+        'assets/images/flags/denmark.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'EUR':
+      return Image.asset(
+        'assets/images/flags/european_union.jpg',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'GBP':
+      return Image.asset(
+        'assets/images/flags/united_kingdom.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'CHF':
+      return Image.asset(
+        'assets/images/flags/switzerland.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'KWD':
+      return Image.asset(
+        'assets/images/flags/kuwait.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'SAR':
+      return Image.asset(
+        'assets/images/flags/saudi_arabia.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'JPY':
+    case 'CNY':
+      return Image.asset(
+        'assets/images/flags/japan.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'BGN':
+      return Image.asset(
+        'assets/images/flags/bulgaria.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'RON':
+      return Image.asset(
+        'assets/images/flags/romania.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'RUB':
+      return Image.asset(
+        'assets/images/flags/russia.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'IRR':
+      return Image.asset(
+        'assets/images/flags/iran.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'PKR':
+      return Image.asset(
+        'assets/images/flags/pakistan.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'QAR':
+      return Image.asset(
+        'assets/images/flags/qatar.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'KRW':
+      return Image.asset(
+        'assets/images/flags/south_korea.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'AZN':
+      return Image.asset(
+        'assets/images/flags/azerbaijan.jpg',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'AED':
+      return Image.asset(
+        'assets/images/flags/united_arab_emirates.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    case 'TR':
+      return Image.asset(
+        'assets/images/flags/turkey_centered.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
+    default:
+      return Image.asset(
+        'assets/images/flags/global.png',
+        alignment: alignment,
+        fit: boxFit,
+      );
   }
 }

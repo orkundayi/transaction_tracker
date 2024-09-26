@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_repository/firebase_repository.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
 import 'package:flutter_application/blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
@@ -27,9 +25,6 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   late GetAllTransactionBloc transactionsBloc;
   late GetUserAccountsBloc getUserAccountsBloc;
   late Timer _timer;
-  final double _lastTotalBalance = 0.0;
-  final double _lastIncome = 0.0;
-  final double _lastExpense = 0.0;
 
   @override
   void initState() {
@@ -81,8 +76,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
         }
       },
       child: _loadedOnce
-          ? Container(
-              color: Colors.white54,
+          ? SizedBox(
               height: 200,
               width: MediaQuery.of(context).size.width,
               child: CarouselSlider.builder(
@@ -137,138 +131,6 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   }
 }
 
-class TotalBalance extends StatelessWidget {
-  const TotalBalance({
-    super.key,
-    required this.theme,
-    required this.totalBalance,
-    required this.income,
-    required this.expense,
-  });
-
-  final ThemeData theme;
-  final double totalBalance;
-  final double income;
-  final double expense;
-
-  @override
-  Widget build(BuildContext context) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        height: 180,
-        width: MediaQuery.of(context).size.width * 0.7,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.secondary,
-              theme.colorScheme.tertiary,
-            ],
-            transform: const GradientRotation(math.pi / 4),
-          ),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Toplam Bakiye',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-            Text(
-              '₺ $totalBalance',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.arrow_down,
-                        color: Color(0xff45de52),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      children: [
-                        const Text(
-                          'Gelirler',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          '$income',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.arrow_up,
-                        color: Color(0xfffb5e69),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      children: [
-                        const Text(
-                          'Giderler',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          '$expense',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class AccountCard extends StatelessWidget {
   final AccountModel account;
   const AccountCard({super.key, required this.account});
@@ -276,39 +138,53 @@ class AccountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(10),
-      width: MediaQuery.of(context).size.width,
-      decoration: const BoxDecoration(
-        color: Colors.black12,
-        borderRadius: BorderRadius.all(Radius.circular(20)),
+      padding: const EdgeInsets.all(16),
+      width: MediaQuery.of(context).size.width * 0.8,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              CircleAvatar(
+                backgroundImage: getCurrencyFlagFromCurrencyCode(account.code).image,
+                radius: 16,
+              ),
+              const SizedBox(width: 10),
               Text(
                 account.name,
                 style: const TextStyle(
                   fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
-              ),
-              const Divider(
-                color: Colors.grey,
-                thickness: 1,
-                height: 8,
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          const Divider(
+            color: Colors.black54,
+            thickness: 1,
+          ),
+          const SizedBox(height: 10),
           Text(
-            '${account.code} ${account.balance}',
+            '${account.balance.toStringAsFixed(2)} ${getCurrencySymbolFromCurrencyCode(account.code)}',
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
           ),
         ],
@@ -327,32 +203,43 @@ class CreateNewAccountCard extends StatefulWidget {
 class _CreateNewAccountCardState extends State<CreateNewAccountCard> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      width: MediaQuery.of(context).size.width,
-      decoration: const BoxDecoration(
-        color: Colors.black12,
-        borderRadius: BorderRadius.all(Radius.circular(20)),
-      ),
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.add_circle_outline,
-            size: 50,
-            color: Colors.grey,
-          ),
-          SizedBox(height: 10),
-          Text(
-            'Yeni Hesap Oluştur',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+    return GestureDetector(
+      onTap: () {
+        // TODO: Action to create a new account
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        width: MediaQuery.of(context).size.width * 0.8,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_circle_outline,
+              size: 50,
+              color: Colors.black,
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Yeni Hesap Oluştur',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
