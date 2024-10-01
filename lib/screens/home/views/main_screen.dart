@@ -129,21 +129,7 @@ class _MainScreenState extends State<MainScreen> {
                       );
                     } else if (state is TransactionFetchSuccess) {
                       final transactions = state.transactions;
-                      if (transactions.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.only(top: 32.0, left: 8, right: 8),
-                          child: Center(
-                            child: Text(
-                              'İşlem Bulunamadı',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
+
                       return Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -228,67 +214,81 @@ class _MainScreenState extends State<MainScreen> {
                               ],
                             ),
                             const SizedBox(height: 10),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: transactions.length,
-                              itemBuilder: (context, index) {
-                                final transaction = transactions[index];
-                                return InkWell(
-                                  onTap: () {
-                                    // TODO: Navigate to transaction detail page
-                                  },
-                                  child: Container(
-                                    margin: EdgeInsets.only(bottom: index != transactions.length - 1 ? 8 : 0),
-                                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey.withOpacity(0.1)),
-                                      borderRadius: BorderRadius.circular(12),
+                            transactions.isEmpty
+                                ? const Padding(
+                                    padding: EdgeInsets.only(top: 32.0, left: 8, right: 8, bottom: 32),
+                                    child: Center(
+                                      child: Text(
+                                        'İşlem Bulunamadı',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(10),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: transactions.length,
+                                    itemBuilder: (context, index) {
+                                      final transaction = transactions[index];
+                                      return InkWell(
+                                        onTap: () {
+                                          // TODO: Navigate to transaction detail page
+                                        },
+                                        child: Container(
+                                          margin: EdgeInsets.only(bottom: index != transactions.length - 1 ? 8 : 0),
+                                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                                           decoration: BoxDecoration(
-                                            color: transaction.type == TransactionType.income ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
-                                            shape: BoxShape.circle,
+                                            border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
-                                          child: getCategoryIcon(transaction.category?.type),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          transaction.category?.name ?? '',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(10),
+                                                decoration: BoxDecoration(
+                                                  color: transaction.type == TransactionType.income ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: getCategoryIcon(transaction.category?.type),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Text(
+                                                transaction.category?.name ?? '',
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const Spacer(),
+                                              Column(
+                                                children: [
+                                                  Text(
+                                                    '${getCurrencySymbolFromCurrencyCode(transaction.currencyCode)} ${transaction.amount}',
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    DateFormat('dd MMM yyyy').format(transaction.date),
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(width: 10),
+                                            ],
                                           ),
                                         ),
-                                        const Spacer(),
-                                        Column(
-                                          children: [
-                                            Text(
-                                              '${getCurrencySymbolFromCurrencyCode(transaction.currencyCode)} ${transaction.amount}',
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              DateFormat('dd MMM yyyy').format(transaction.date),
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(width: 10),
-                                      ],
-                                    ),
+                                      );
+                                    },
                                   ),
-                                );
-                              },
-                            ),
                           ],
                         ),
                       );

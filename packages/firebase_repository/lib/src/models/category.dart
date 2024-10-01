@@ -98,25 +98,26 @@ getCategoryName(CategoryType? type) {
 }
 
 getCategoryIcon(CategoryType? type) {
+  double size = 16;
   switch (type) {
     case CategoryType.electronics:
-      return const FaIcon(FontAwesomeIcons.mobileScreenButton);
+      return FaIcon(FontAwesomeIcons.mobileScreenButton, size: size);
     case CategoryType.education:
-      return const FaIcon(FontAwesomeIcons.graduationCap);
+      return FaIcon(FontAwesomeIcons.graduationCap, size: size);
     case CategoryType.entertainment:
-      return const FaIcon(FontAwesomeIcons.gamepad);
+      return FaIcon(FontAwesomeIcons.gamepad, size: size);
     case CategoryType.food:
-      return const FaIcon(FontAwesomeIcons.burger);
+      return FaIcon(FontAwesomeIcons.burger, size: size);
     case CategoryType.health:
-      return const FaIcon(FontAwesomeIcons.heartPulse);
+      return FaIcon(FontAwesomeIcons.heartPulse, size: size);
     case CategoryType.transportation:
-      return const FaIcon(FontAwesomeIcons.bus);
+      return FaIcon(FontAwesomeIcons.bus, size: size);
     case CategoryType.salary:
     case CategoryType.passive:
-      return const FaIcon(FontAwesomeIcons.wallet);
+      return FaIcon(FontAwesomeIcons.wallet, size: size);
     case CategoryType.otherExpense:
     case CategoryType.otherIncome:
     default:
-      return const FaIcon(FontAwesomeIcons.bars);
+      return FaIcon(FontAwesomeIcons.bars, size: size);
   }
 }

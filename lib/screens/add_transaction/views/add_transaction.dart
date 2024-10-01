@@ -507,10 +507,12 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
 
   Widget currencyTextFormField() {
     return SizedBox(
+      height: 60,
       width: MediaQuery.of(context).size.width * 0.95,
       child: Stack(
         children: [
           TextFormField(
+            cursorColor: Theme.of(context).colorScheme.primary,
             style: const TextStyle(
               color: Colors.black,
               fontSize: 18,
@@ -585,8 +587,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
           ),
           Positioned(
             right: 20,
-            top: 15,
-            bottom: 15,
+            top: 20,
+            bottom: 20,
             child: IgnorePointer(
               ignoring: true,
               child: Text(
