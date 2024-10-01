@@ -11,6 +11,7 @@ import '../../../blocs/create_transaction_bloc/create_transaction_bloc.dart';
 import '../../../blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
 import '../../../blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
 import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
+import '../../../blocs/user_account_cubit/user_account_cubit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -46,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
               BlocProvider.value(value: allTransactionsBloc),
               BlocProvider.value(value: transactionsBloc),
               BlocProvider.value(value: accountsBloc),
+              BlocProvider(create: (context) => UserAccountCubit()),
             ],
             child: const MainScreen(),
           ),

@@ -2,6 +2,7 @@ import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
+import 'package:flutter_application/blocs/user_account_cubit/user_account_cubit.dart';
 import 'package:flutter_application/screens/transactions/views/all_transactions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -22,11 +23,13 @@ class _MainScreenState extends State<MainScreen> {
   late GetUserTransactionsBloc transactionsBloc;
   late GetAllTransactionBloc allTransactionsBloc;
   late GetUserAccountsBloc userAccountBloc;
+  late UserAccountCubit userAccountCubit;
   @override
   void initState() {
     transactionsBloc = context.read<GetUserTransactionsBloc>();
     allTransactionsBloc = context.read<GetAllTransactionBloc>();
     userAccountBloc = context.read<GetUserAccountsBloc>();
+    userAccountCubit = context.read<UserAccountCubit>();
     transactionsBloc.setTransactionMode(TransactionMode.last);
     transactionsBloc.setTransactionType(TransactionType.expense);
     super.initState();
@@ -111,6 +114,7 @@ class _MainScreenState extends State<MainScreen> {
                 providers: [
                   BlocProvider.value(value: transactionsBloc),
                   BlocProvider.value(value: userAccountBloc),
+                  BlocProvider.value(value: userAccountCubit),
                 ],
                 child: const TotalBalanceCard(),
               ),

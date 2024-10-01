@@ -5,6 +5,7 @@ import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
 import 'package:flutter_application/blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
+import 'package:flutter_application/blocs/user_account_cubit/user_account_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TotalBalanceCard extends StatefulWidget {
@@ -16,7 +17,6 @@ class TotalBalanceCard extends StatefulWidget {
 
 class _TotalBalanceCardState extends State<TotalBalanceCard> {
   final CarouselSliderController _carouselSliderController = CarouselSliderController();
-  bool _privateWidgetVisible = false;
   int _currentIndex = 0;
 
   List<AccountModel> accounts = [];
@@ -24,12 +24,14 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   bool _loadedOnce = false;
   late GetAllTransactionBloc transactionsBloc;
   late GetUserAccountsBloc getUserAccountsBloc;
+  late UserAccountCubit userAccountCubit;
   late Timer _timer;
 
   @override
   void initState() {
     transactionsBloc = context.read<GetAllTransactionBloc>();
     getUserAccountsBloc = context.read<GetUserAccountsBloc>();
+    userAccountCubit = context.read<UserAccountCubit>();
     calculateTotalBalance();
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       calculateTotalBalance();
@@ -41,12 +43,6 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   void dispose() {
     _timer.cancel();
     super.dispose();
-  }
-
-  void setVisibleWidget() {
-    setState(() {
-      _privateWidgetVisible = !_privateWidgetVisible;
-    });
   }
 
   void calculateTotalBalance() {
@@ -68,6 +64,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
 
           setState(() {
             _loadedOnce = true;
+            userAccountCubit.updateIndex(_currentIndex, accounts.length == _currentIndex ? null : accounts[_currentIndex]);
           });
         } else if (state is AccountFetchError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -87,12 +84,13 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                   onPageChanged: (index, reason) {
                     setState(() {
                       _currentIndex = index;
+                      userAccountCubit.updateIndex(_currentIndex, accounts.length == _currentIndex ? null : accounts[_currentIndex]);
                     });
                   },
                   height: 180,
                   enableInfiniteScroll: false,
-                  initialPage: 0,
-                  scrollPhysics: _privateWidgetVisible ? const NeverScrollableScrollPhysics() : const AlwaysScrollableScrollPhysics(),
+                  initialPage: context.watch<UserAccountCubit>().state is UserAccountIndexUpdated ? (context.watch<UserAccountCubit>().state as UserAccountIndexUpdated).index : 0,
+                  scrollPhysics: const AlwaysScrollableScrollPhysics(),
                 ),
                 carouselController: _carouselSliderController,
                 itemBuilder: (context, index, realIndex) {
