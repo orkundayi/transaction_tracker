@@ -140,7 +140,7 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
                             'Hesap',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 24,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -151,7 +151,7 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
                           Text(
                             widget.selectedAccount?.code ?? 'Hesap Seçin',
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 24,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -220,7 +220,7 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
                                 'Aktarılacak Hesap',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -231,7 +231,7 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
                               Text(
                                 widget.selectedTransferAccount?.code ?? 'Hesap Seçin',
                                 style: const TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
