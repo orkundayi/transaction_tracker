@@ -182,7 +182,7 @@ class _MainScreenState extends State<MainScreen> {
                                 builder: (context) => BlocProvider.value(
                                   value: GetUserTransactionsBloc(
                                     FirebaseTransactionRepository(),
-                                    BlocProvider.of<UserAccountCubit>(context),
+                                    userAccountCubit,
                                   ),
                                   child: const AllTransactions(),
                                 ),
