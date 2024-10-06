@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -116,136 +118,143 @@ class _MainScreenState extends State<MainScreen> {
                   BlocProvider.value(value: userAccountBloc),
                   BlocProvider.value(value: userAccountCubit),
                 ],
-                child: const TotalBalanceCard(),
+                child: TotalBalanceCard(
+                  onAccountChanged: () async {
+                    Timer(const Duration(milliseconds: 500), () {
+                      transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: BlocBuilder<GetUserTransactionsBloc, FetchTransactionState>(
-                  builder: (context, state) {
-                    if (state is TransactionFetchingInProgress) {
-                      return const SizedBox(
-                        height: 120,
-                        width: 120,
-                        child: Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    } else if (state is TransactionFetchSuccess) {
-                      final transactions = state.transactions;
-
-                      return Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: DropdownButton(
-                                    value: context.watch<GetUserTransactionsBloc>().transactionType,
-                                    items: const [
-                                      DropdownMenuItem(value: TransactionType.income, child: Text('Son Gelirler')),
-                                      DropdownMenuItem(value: TransactionType.expense, child: Text('Son Giderler')),
-                                    ],
-                                    onChanged: (value) {
-                                      if (value != null) {
-                                        transactionsBloc.setTransactionType(value);
-                                        transactionsBloc.add(FetchLastTransactions(value));
-                                      }
-                                    },
-                                    style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16, fontWeight: FontWeight.bold),
-                                    dropdownColor: Colors.white,
-                                    icon: Padding(
-                                      padding: const EdgeInsets.only(left: 8.0),
-                                      child: Icon(
-                                        FontAwesomeIcons.caretDown,
-                                        color: Theme.of(context).colorScheme.primary,
-                                      ),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                    ),
-                                    underline: Container(
-                                      color: Colors.transparent,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => BlocProvider.value(
-                                          value: GetUserTransactionsBloc(FirebaseTransactionRepository()),
-                                          child: const AllTransactions(),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Hepsini Gör',
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.primary,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                              width: 1,
                             ),
-                            const SizedBox(height: 10),
-                            transactions.isEmpty
-                                ? const Padding(
-                                    padding: EdgeInsets.only(top: 32.0, left: 8, right: 8, bottom: 32),
-                                    child: Center(
-                                      child: Text(
-                                        'İşlem Bulunamadı',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                          ),
+                          child: DropdownButton(
+                            value: context.watch<GetUserTransactionsBloc>().transactionType,
+                            items: const [
+                              DropdownMenuItem(value: TransactionType.income, child: Text('Son Gelirler')),
+                              DropdownMenuItem(value: TransactionType.expense, child: Text('Son Giderler')),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                transactionsBloc.setTransactionType(value);
+                                transactionsBloc.add(FetchLastTransactions(value));
+                              }
+                            },
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            dropdownColor: Colors.white,
+                            icon: Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Icon(
+                                FontAwesomeIcons.caretDown,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            underline: Container(
+                              color: Colors.transparent,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => BlocProvider.value(
+                                  value: GetUserTransactionsBloc(
+                                    FirebaseTransactionRepository(),
+                                    BlocProvider.of<UserAccountCubit>(context),
+                                  ),
+                                  child: const AllTransactions(),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              'Hepsini Gör',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    BlocBuilder<GetUserTransactionsBloc, FetchTransactionState>(
+                      builder: (context, state) {
+                        if (state is TransactionFetchingInProgress) {
+                          return const SizedBox(
+                            height: 120,
+                            width: 120,
+                            child: Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        } else if (state is TransactionFetchSuccess) {
+                          final transactions = state.transactions;
+
+                          return transactions.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.only(top: 32.0, left: 8, right: 8, bottom: 32),
+                                  child: Center(
+                                    child: Text(
+                                      'İşlem Bulunamadı',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  )
-                                : ListView.builder(
-                                    shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
-                                    itemCount: transactions.length,
-                                    itemBuilder: (context, index) {
-                                      final transaction = transactions[index];
-                                      return InkWell(
+                                  ),
+                                )
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: transactions.length,
+                                  itemBuilder: (context, index) {
+                                    final transaction = transactions[index];
+                                    return Padding(
+                                      padding: EdgeInsets.only(bottom: index != transactions.length - 1 ? 8 : 0),
+                                      child: InkWell(
                                         onTap: () {
                                           // TODO: Navigate to transaction detail page
                                         },
                                         child: Container(
-                                          margin: EdgeInsets.only(bottom: index != transactions.length - 1 ? 8 : 0),
                                           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                                           decoration: BoxDecoration(
+                                            color: Colors.white,
                                             border: Border.all(color: Colors.grey.withOpacity(0.1)),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
@@ -271,7 +280,7 @@ class _MainScreenState extends State<MainScreen> {
                                               Column(
                                                 children: [
                                                   Text(
-                                                    '${getCurrencySymbolFromCurrencyCode(transaction.currencyCode)} ${transaction.amount}',
+                                                    '${getCurrencySymbolFromCurrencyCode(transaction.toCurrencyCode)} ${transaction.amount}',
                                                     style: const TextStyle(
                                                       fontSize: 16,
                                                       fontWeight: FontWeight.bold,
@@ -290,24 +299,33 @@ class _MainScreenState extends State<MainScreen> {
                                             ],
                                           ),
                                         ),
-                                      );
-                                    },
-                                  ),
-                          ],
-                        ),
-                      );
-                    } else if (state is TransactionFetchError) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 32.0, left: 8, right: 8),
-                        child: Center(child: Text('Veriler yüklenirken hata oluştu: ${state.error}')),
-                      );
-                    } else {
-                      return const Padding(
-                        padding: EdgeInsets.only(top: 32.0, left: 8, right: 8),
-                        child: Center(child: Text('Veri yok.')),
-                      );
-                    }
-                  },
+                                      ),
+                                    );
+                                  },
+                                );
+                        } else if (state is TransactionFetchError) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 32.0, left: 8, right: 8),
+                            child: Center(child: Text('Veriler yüklenirken hata oluştu: ${state.error}')),
+                          );
+                        } else {
+                          return const Padding(
+                            padding: EdgeInsets.only(top: 32.0, left: 8, right: 8, bottom: 32),
+                            child: Center(
+                              child: Text(
+                                'İşlem Bulunamadı',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
             ],

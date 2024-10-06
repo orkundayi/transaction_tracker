@@ -5,9 +5,12 @@ sealed class UserAccountState {}
 
 final class UserAccountInitial extends UserAccountState {}
 
-final class UserAccountIndexUpdated extends UserAccountState {
-  final int index;
-  final AccountModel? account;
+final class UserAccountIndexUpdating extends UserAccountState {}
 
-  UserAccountIndexUpdated(this.index, this.account);
+final class UserAccountIndexUpdated extends UserAccountState {}
+
+final class UserAccountIndexUpdateError extends UserAccountState {
+  final Object error;
+
+  UserAccountIndexUpdateError(this.error);
 }

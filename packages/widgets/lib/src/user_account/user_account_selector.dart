@@ -103,7 +103,7 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: SizedBox(
-                  width: MediaQuery.of(context).size.width,
+                  width: MediaQuery.of(context).size.width * 1.25,
                   height: 54,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -186,7 +186,7 @@ class _UserAccountSelectorWidgetState extends State<UserAccountSelectorWidget> {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: SizedBox(
-                      width: MediaQuery.of(context).size.width,
+                      width: MediaQuery.of(context).size.width * 1.25,
                       height: 54,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

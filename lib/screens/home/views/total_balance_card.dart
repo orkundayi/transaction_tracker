@@ -9,7 +9,8 @@ import 'package:flutter_application/blocs/user_account_cubit/user_account_cubit.
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TotalBalanceCard extends StatefulWidget {
-  const TotalBalanceCard({super.key});
+  final Function() onAccountChanged;
+  const TotalBalanceCard({super.key, required this.onAccountChanged});
 
   @override
   State<TotalBalanceCard> createState() => _TotalBalanceCardState();
@@ -82,14 +83,15 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                   viewportFraction: 0.7,
                   enlargeCenterPage: true,
                   onPageChanged: (index, reason) {
-                    setState(() {
-                      _currentIndex = index;
-                      userAccountCubit.updateIndex(_currentIndex, accounts.length == _currentIndex ? null : accounts[_currentIndex]);
-                    });
+                    _currentIndex = index;
+                    userAccountCubit.updateIndex(_currentIndex, accounts.length == _currentIndex ? null : accounts[_currentIndex]);
+                    if (userAccountCubit.currentAccount != null && userAccountCubit.previousAccount != null) {
+                      widget.onAccountChanged();
+                    }
                   },
                   height: 180,
                   enableInfiniteScroll: false,
-                  initialPage: context.watch<UserAccountCubit>().state is UserAccountIndexUpdated ? (context.watch<UserAccountCubit>().state as UserAccountIndexUpdated).index : 0,
+                  initialPage: context.watch<UserAccountCubit>().state is UserAccountIndexUpdated ? (context.watch<UserAccountCubit>().currentIndex) : 0,
                   scrollPhysics: const AlwaysScrollableScrollPhysics(),
                 ),
                 carouselController: _carouselSliderController,

@@ -58,21 +58,27 @@ class FirebaseTransactionRepository implements TransactionRepository {
   }
 
   @override
-  Future<List<TransactionModel>> fetchLastTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate}) {
-    return transactionCollection
-        .where('userId', isEqualTo: getCurrenUser()?.uid ?? 'testUser')
-        .where('type', isEqualTo: type.name)
-        .where('date', isGreaterThanOrEqualTo: firstDate != null ? Timestamp.fromDate(firstDate) : null)
-        .where('date', isLessThanOrEqualTo: lastDate != null ? Timestamp.fromDate(lastDate) : null)
-        .orderBy(
-          'date',
-          descending: true,
-        )
-        .limit(5)
-        .get()
-        .then((snapshot) async {
+  Future<List<TransactionModel>> fetchLastTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate, AccountModel? account}) {
+    Query query = transactionCollection.where('userId', isEqualTo: getCurrenUser()?.uid ?? 'testUser').where('type', isEqualTo: type.name);
+
+    if (account != null) {
+      query = query.where('accountCode', isEqualTo: account.code);
+    }
+
+    if (firstDate != null) {
+      query = query.where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate));
+    }
+    if (lastDate != null) {
+      query = query.where('date', isLessThanOrEqualTo: Timestamp.fromDate(lastDate));
+    }
+
+    return query.orderBy('date', descending: true).limit(5).get().then((snapshot) async {
       debugPrint('snapshot.docs: ${snapshot.docs}');
-      return snapshot.docs.map((doc) => TransactionModel.fromMap(doc.data())).toList();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return TransactionModel.fromMap(data);
+      }).toList();
     });
   }
 

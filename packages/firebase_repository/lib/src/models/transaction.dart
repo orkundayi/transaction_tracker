@@ -4,6 +4,7 @@ class TransactionModel {
   String userId;
   String id;
   String? title;
+  String? accountCode;
   TransactionType type;
   double amount;
   double? currencyRate;
@@ -19,6 +20,7 @@ class TransactionModel {
     required this.userId,
     this.id = '',
     this.title,
+    this.accountCode,
     required this.type,
     required this.amount,
     this.currencyRate = 0.0,
@@ -48,7 +50,8 @@ class TransactionModel {
       userId: json['userId'] as String? ?? '',
       id: json['id'],
       title: json['title'],
-      type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+      type: getTransactionType(json['type']),
+      accountCode: json['accountCode'],
       amount: json['amount'],
       currencyRate: json['currencyRate'],
       calculatedAmount: json['calculatedAmount'],
@@ -66,7 +69,8 @@ class TransactionModel {
       'userId': userId,
       'id': id,
       'title': title,
-      'type': type == TransactionType.income ? 'income' : 'expense',
+      'accountCode': accountCode,
+      'type': type.name,
       'amount': amount,
       'currencyRate': currencyRate,
       'calculatedAmount': calculatedAmount,
@@ -87,15 +91,19 @@ enum TransactionType {
 }
 
 String getTransactionTypeName(TransactionType type) {
-  switch (type) {
-    case TransactionType.income:
-      return 'Gelir';
-    case TransactionType.expense:
-      return 'Gider';
-    case TransactionType.transfer:
-      return 'Transfer';
+  return type.name;
+}
+
+TransactionType getTransactionType(String name) {
+  switch (name) {
+    case 'Gelir':
+      return TransactionType.income;
+    case 'Gider':
+      return TransactionType.expense;
+    case 'Transfer':
+      return TransactionType.transfer;
     default:
-      return '';
+      return TransactionType.expense;
   }
 }
 

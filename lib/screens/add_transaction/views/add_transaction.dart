@@ -696,6 +696,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
         transaction.type = TransactionType.transfer;
         transaction.currencyCode = _currentCurrencyCode;
         transaction.toCurrencyCode = selectedTransferAccount!.code;
+        transaction.accountCode = transaction.toCurrencyCode;
         transaction.date = DateTime.now().toLocal();
         transaction.currencyRate = double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
         transaction.amount = double.parse(_currencyController.text);
@@ -719,6 +720,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
     transaction.type = TransactionType.expense;
     transaction.currencyCode = _currentCurrencyCode;
     transaction.toCurrencyCode = selectedAccount!.code;
+    transaction.accountCode = transaction.toCurrencyCode;
   }
 
   Future<List<InstallmentModel>?> createInstallments() async {
@@ -763,6 +765,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
     transaction.calculatedAmount = double.parse(_currencyController.text) * exchangeRate;
     transaction.currencyCode = _currentCurrencyCode;
     transaction.toCurrencyCode = selectedAccount!.code;
+    transaction.accountCode = transaction.toCurrencyCode;
   }
 
   void _toggleCurrency() async {

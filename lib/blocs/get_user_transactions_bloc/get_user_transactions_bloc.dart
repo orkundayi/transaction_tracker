@@ -2,6 +2,8 @@ import 'package:bloc/bloc.dart';
 import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
 
+import '../user_account_cubit/user_account_cubit.dart';
+
 part 'get_user_transactions_event.dart';
 part 'get_user_transactions_state.dart';
 
@@ -17,6 +19,7 @@ class GetUserTransactionsBloc extends Bloc<GetTransactionEvent, FetchTransaction
   DateTime get transactionDateLast => _transactionDateLast;
 
   final TransactionRepository transactionRepository;
+  final UserAccountCubit userAccountCubit;
 
   setTransactionMode(TransactionMode mode) {
     _transactionMode = mode;
@@ -31,7 +34,7 @@ class GetUserTransactionsBloc extends Bloc<GetTransactionEvent, FetchTransaction
     _transactionDateLast = lastDate;
   }
 
-  GetUserTransactionsBloc(this.transactionRepository) : super(FetchTransactionInitial()) {
+  GetUserTransactionsBloc(this.transactionRepository, this.userAccountCubit) : super(FetchTransactionInitial()) {
     on<FetchUserTransactions>((event, emit) async {
       emit(TransactionFetchingInProgress());
       _transactionMode = TransactionMode.all;
@@ -49,7 +52,8 @@ class GetUserTransactionsBloc extends Bloc<GetTransactionEvent, FetchTransaction
       _transactionMode = TransactionMode.last;
       _transactionType = event.type ?? _transactionType;
       try {
-        final transactions = await transactionRepository.fetchLastTransactionsForUser(_transactionType);
+        final transactions =
+            await transactionRepository.fetchLastTransactionsForUser(_transactionType, account: userAccountCubit.currentAccount ?? userAccountCubit.previousAccount);
         emit(TransactionFetchSuccess(transactions));
       } catch (e) {
         emit(TransactionFetchError(e));

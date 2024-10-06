@@ -24,12 +24,14 @@ class _HomeScreenState extends State<HomeScreen> {
   late GetUserAccountsBloc accountsBloc;
   late GetUserTransactionsBloc transactionsBloc;
   late GetAllTransactionBloc allTransactionsBloc;
+  late UserAccountCubit userAccountCubit;
   @override
   initState() {
     super.initState();
     transactionsBloc = context.read<GetUserTransactionsBloc>();
     accountsBloc = context.read<GetUserAccountsBloc>();
     allTransactionsBloc = context.read<GetAllTransactionBloc>();
+    userAccountCubit = context.read<UserAccountCubit>();
     transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
   }
 
@@ -47,7 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
               BlocProvider.value(value: allTransactionsBloc),
               BlocProvider.value(value: transactionsBloc),
               BlocProvider.value(value: accountsBloc),
-              BlocProvider(create: (context) => UserAccountCubit()),
+              BlocProvider.value(value: accountsBloc),
+              BlocProvider.value(value: userAccountCubit),
             ],
             child: const MainScreen(),
           ),
