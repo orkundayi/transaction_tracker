@@ -52,7 +52,8 @@ class CategorySelectorWidgetState extends State<CategorySelectorWidget> {
             enableDrag: false,
             builder: (context) {
               return FractionallySizedBox(
-                heightFactor: 0.8,
+                heightFactor: 0.95,
+                widthFactor: 1,
                 child: Column(
                   children: [
                     const Padding(
@@ -67,37 +68,43 @@ class CategorySelectorWidgetState extends State<CategorySelectorWidget> {
                     ),
                     Expanded(
                       child: ListView.builder(
-                        shrinkWrap: true,
                         itemCount: widget.paymentSelectionState == PaymentSelectionState.expense ? CategoryModel.expenseCategoryTypeCount : CategoryModel.incomeCategoryTypeCount,
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                         itemBuilder: (context, index) {
                           CategoryType categoryType =
                               widget.paymentSelectionState == PaymentSelectionState.expense ? CategoryModel.expenseCategoryTypes[index] : CategoryModel.incomeCategoryTypes[index];
-                          return ListTile(
-                            title: Text(
-                              getCategoryName(categoryType),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            leading: getCategoryIcon(categoryType),
+                          return Card(
+                            elevation: 2,
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(16.0),
                             ),
-                            onTap: () {
-                              _categoryController.text = getCategoryName(categoryType);
-                              this.categoryType = categoryType;
-                              widget.onDataChanged(_categoryController.text, this.categoryType);
-                              setState(() {});
-                              Navigator.of(context).pop();
-                            },
+                            child: ListTile(
+                              title: Text(
+                                getCategoryName(categoryType),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              leading: getCategoryIcon(categoryType),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              onTap: () {
+                                _categoryController.text = getCategoryName(categoryType);
+                                this.categoryType = categoryType;
+                                widget.onDataChanged(_categoryController.text, this.categoryType);
+                                setState(() {});
+                                Navigator.of(context).pop();
+                              },
+                            ),
                           );
                         },
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
                       child: SizedBox(
                         width: MediaQuery.of(context).size.width * 0.9,
                         height: kToolbarHeight,
@@ -106,12 +113,12 @@ class CategorySelectorWidgetState extends State<CategorySelectorWidget> {
                             Navigator.pop(context);
                           },
                           style: TextButton.styleFrom(
-                            backgroundColor: Colors.white,
+                            backgroundColor: Colors.redAccent,
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(24),
                             ),
-                            shadowColor: Colors.black,
-                            elevation: 1,
+                            elevation: 3,
                           ),
                           child: const Text(
                             'Vazgeç',

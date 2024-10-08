@@ -169,6 +169,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                                         _categoryController.text = 'Kategori Seçin';
                                         categoryType = CategoryType.otherExpense;
                                         categoryKey.currentState?.clearDataAccordingToPaymentSelectionState();
+                                        selectedTransferAccount = null;
                                         if (_pageStateNotifier.value == PaymentSelectionState.transfer && _currentCurrencyCode.isNotEmpty && selectedAccount != null) {
                                           compareCurrencyCodesAndCalculateExchangeRate();
                                         }
@@ -189,6 +190,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                                         _categoryController.text = 'Kategori Seçin';
                                         categoryType = CategoryType.otherIncome;
                                         categoryKey.currentState?.clearDataAccordingToPaymentSelectionState();
+                                        selectedTransferAccount = null;
                                         if (_pageStateNotifier.value == PaymentSelectionState.transfer && _currentCurrencyCode.isNotEmpty && selectedAccount != null) {
                                           compareCurrencyCodesAndCalculateExchangeRate();
                                         }
@@ -281,6 +283,13 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   context: context,
                   isScrollControlled: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                  ),
+                  showDragHandle: true,
+                  enableDrag: false,
                   builder: (context) {
                     return BlocProvider(
                       create: (context) => GetUserAccountsBloc(FirebaseAccountRepository()),
@@ -288,6 +297,28 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                     );
                   },
                 );
+                if (account != null && account.code == selectedTransferAccount?.code) {
+                  if (context.mounted) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Hesap Seçme Hatası'),
+                          content: const Text('Seçilen hesap, Transfer hesabı ile aynı olamaz.'),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Tamam'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
+                  return;
+                }
                 if (account != null) {
                   setState(() {
                     selectedAccount = account;
@@ -309,6 +340,13 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   context: context,
                   isScrollControlled: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                  ),
+                  showDragHandle: true,
+                  enableDrag: false,
                   builder: (context) {
                     return BlocProvider(
                       create: (context) => GetUserAccountsBloc(FirebaseAccountRepository()),
@@ -317,6 +355,28 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                   },
                 );
                 if (account != null) {
+                  if (selectedAccount != null && selectedAccount!.code == account.code) {
+                    if (context.mounted) {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Hesap Seçme Hatası'),
+                            content: const Text('Transfer hesabı, seçilen hesap ile aynı olamaz.'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('Tamam'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
+                    return;
+                  }
                   setState(() {
                     selectedTransferAccount = account;
                     if (_currentCurrencyCode.isNotEmpty && selectedAccount != null) {

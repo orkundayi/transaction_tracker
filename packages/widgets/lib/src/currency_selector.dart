@@ -42,6 +42,7 @@ class CurrencySelectorState extends State<CurrencySelector> {
   Widget build(BuildContext context) {
     return FractionallySizedBox(
       heightFactor: 0.95,
+      widthFactor: 1,
       child: Column(
         children: [
           AppBar(
@@ -67,7 +68,7 @@ class CurrencySelectorState extends State<CurrencySelector> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                fillColor: Colors.grey[200],
+                fillColor: Theme.of(context).scaffoldBackgroundColor,
                 filled: true,
               ),
               onChanged: _filterCurrencies,
