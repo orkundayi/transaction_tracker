@@ -8,6 +8,8 @@ import 'package:flutter_application/blocs/get_user_accounts_bloc/get_user_accoun
 import 'package:flutter_application/blocs/user_account_cubit/user_account_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../create_account/create_account_screen.dart';
+
 class TotalBalanceCard extends StatefulWidget {
   final Function() onAccountChanged;
   const TotalBalanceCard({super.key, required this.onAccountChanged});
@@ -204,8 +206,25 @@ class _CreateNewAccountCardState extends State<CreateNewAccountCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         // TODO: Action to create a new account
+        CurrencyRates? currencyRates = await getCurrencyRates();
+        if (currencyRates != null && context.mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                create: (context) => GetUserAccountsBloc(FirebaseAccountRepository()),
+                child: CreateAccountScreen(currencyRates: currencyRates),
+              ),
+            ),
+          );
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Bilinmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.')),
+            );
+          }
+        }
       },
       child: Container(
         padding: const EdgeInsets.all(16),

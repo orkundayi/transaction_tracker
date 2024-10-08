@@ -1,5 +1,8 @@
 // ignore_for_file: deprecated_member_use
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart' as xml;
 
 class CurrencyModel {
@@ -172,6 +175,21 @@ CurrencyRates parseCurrencyFromResponse(String xmlString) {
     }
   }
   return currencyRates;
+}
+
+Future<CurrencyRates?> getCurrencyRates() async {
+  http.Response response = await getCurrencies();
+  if (response.statusCode == 200) {
+    return parseCurrencyFromResponse(response.body);
+  } else {
+    log('Failed to load currency rates');
+    return null;
+  }
+}
+
+Future<http.Response> getCurrencies() async {
+  final response = await http.get(Uri.parse('https://www.tcmb.gov.tr/kurlar/today.xml'));
+  return response;
 }
 
 class CurrencyRates {
