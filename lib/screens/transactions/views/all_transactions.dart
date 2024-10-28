@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 
-import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
+import '../../../blocs/get_user_transactions/get_user_transactions_bloc.dart';
 
 class AllTransactions extends StatefulWidget {
   const AllTransactions({super.key});
@@ -131,7 +131,9 @@ class _AllTransactionsState extends State<AllTransactions> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: transaction.type == TransactionType.income ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                      color: transaction.type == TransactionType.income
+                          ? Colors.green.withOpacity(0.2)
+                          : Colors.red.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
                     child: getCategoryIcon(transaction.category?.type),

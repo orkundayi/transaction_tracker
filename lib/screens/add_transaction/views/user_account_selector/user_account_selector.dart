@@ -2,7 +2,7 @@ import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
+import '../../../../blocs/get_user_accounts/get_user_accounts_bloc.dart';
 
 class UserAccountSelector extends StatefulWidget {
   const UserAccountSelector({super.key});

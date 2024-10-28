@@ -8,8 +8,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:widgets/widgets.dart';
 
-import '../../../blocs/create_transaction_bloc/create_transaction_bloc.dart';
-import '../../../blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
+import '../../../blocs/create_transaction/create_transaction_bloc.dart';
+import '../../../blocs/get_user_accounts/get_user_accounts_bloc.dart';
 import '../../../blocs/update_user_account/update_user_account_bloc.dart';
 import 'user_account_selector/user_account_selector.dart';
 
@@ -25,7 +25,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   final ValueListenable<bool> _isExchangeRateEnabled = ValueNotifier<bool>(false);
   final TextEditingController _currencyController = TextEditingController();
   final TextEditingController _exchangeRateController = TextEditingController();
-  final ValueNotifier<PaymentSelectionState> _pageStateNotifier = ValueNotifier<PaymentSelectionState>(PaymentSelectionState.expense);
+  final ValueNotifier<PaymentSelectionState> _pageStateNotifier =
+      ValueNotifier<PaymentSelectionState>(PaymentSelectionState.expense);
   TransactionModel transaction = TransactionModel.empty();
   CurrencyRates? currencyRates;
 
@@ -137,7 +138,9 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                                   child: Text(
                                     'Gelir',
                                     style: TextStyle(
-                                      color: _pageStateNotifier.value == PaymentSelectionState.income ? Theme.of(context).colorScheme.primary : Colors.black,
+                                      color: _pageStateNotifier.value == PaymentSelectionState.income
+                                          ? Theme.of(context).colorScheme.primary
+                                          : Colors.black,
                                     ),
                                   ),
                                 ),
@@ -150,7 +153,9 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                                   child: Text(
                                     'Transfer',
                                     style: TextStyle(
-                                      color: _pageStateNotifier.value == PaymentSelectionState.transfer ? Theme.of(context).colorScheme.primary : Colors.black,
+                                      color: _pageStateNotifier.value == PaymentSelectionState.transfer
+                                          ? Theme.of(context).colorScheme.primary
+                                          : Colors.black,
                                     ),
                                   ),
                                 ),
@@ -170,7 +175,9 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                                         categoryType = CategoryType.otherExpense;
                                         categoryKey.currentState?.clearDataAccordingToPaymentSelectionState();
                                         selectedTransferAccount = null;
-                                        if (_pageStateNotifier.value == PaymentSelectionState.transfer && _currentCurrencyCode.isNotEmpty && selectedAccount != null) {
+                                        if (_pageStateNotifier.value == PaymentSelectionState.transfer &&
+                                            _currentCurrencyCode.isNotEmpty &&
+                                            selectedAccount != null) {
                                           compareCurrencyCodesAndCalculateExchangeRate();
                                         }
                                       });
@@ -191,7 +198,9 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                                         categoryType = CategoryType.otherIncome;
                                         categoryKey.currentState?.clearDataAccordingToPaymentSelectionState();
                                         selectedTransferAccount = null;
-                                        if (_pageStateNotifier.value == PaymentSelectionState.transfer && _currentCurrencyCode.isNotEmpty && selectedAccount != null) {
+                                        if (_pageStateNotifier.value == PaymentSelectionState.transfer &&
+                                            _currentCurrencyCode.isNotEmpty &&
+                                            selectedAccount != null) {
                                           compareCurrencyCodesAndCalculateExchangeRate();
                                         }
                                       });
@@ -210,14 +219,17 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                                     _exchangeRateController.text = '';
                                     selectedAccount = null;
                                     selectedTransferAccount = null;
-                                    selectedAccount != null ? _currentCurrencyCode = selectedAccount!.code : _currentCurrencyCode = 'TR';
+                                    selectedAccount != null
+                                        ? _currentCurrencyCode = selectedAccount!.code
+                                        : _currentCurrencyCode = 'TR';
                                     _currentIcon = selectedAccount != null
                                         ? getCurrencySymbolFromCurrencyCode(
                                             selectedAccount!.code,
                                           )
                                         : '₺';
                                     if (_currentCurrencyCode.isNotEmpty && selectedAccount != null) {
-                                      compareCurrencyCodesAndCalculateExchangeRate(transferAccount: selectedTransferAccount);
+                                      compareCurrencyCodesAndCalculateExchangeRate(
+                                          transferAccount: selectedTransferAccount);
                                     }
                                   });
                                 },
@@ -252,7 +264,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                                     TextButton(
                                       onPressed: () {
                                         Navigator.of(context).pop();
-                                        (_isExchangeRateEnabled as ValueNotifier<bool>).value = !(_isExchangeRateEnabled).value;
+                                        (_isExchangeRateEnabled as ValueNotifier<bool>).value =
+                                            !(_isExchangeRateEnabled).value;
                                       },
                                       child: const Text('Evet'),
                                     ),
@@ -457,7 +470,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
               transaction.amount = double.parse(_currencyController.text);
               transaction.currencyCode = _currentCurrencyCode;
               transaction.category = CategoryModel.empty(CategoryType.otherExpense);
-              transaction.category!.name = _categoryController.text == 'Kategori Seçin' ? 'Diğer' : _categoryController.text;
+              transaction.category!.name =
+                  _categoryController.text == 'Kategori Seçin' ? 'Diğer' : _categoryController.text;
               transaction.category!.type = categoryType;
               await transactionCalculate(transaction);
               complete = await transactionExchangeRateCheck(transaction);
@@ -758,7 +772,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
         transaction.toCurrencyCode = selectedTransferAccount!.code;
         transaction.accountCode = transaction.toCurrencyCode;
         transaction.date = DateTime.now().toLocal();
-        transaction.currencyRate = double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
+        transaction.currencyRate =
+            double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
         transaction.amount = double.parse(_currencyController.text);
         transaction.calculatedAmount = double.parse(_currencyController.text) * transaction.currencyRate!;
         break;
@@ -774,7 +789,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
       }
     } else {
       transaction.date = paymentDate!;
-      transaction.currencyRate = double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
+      transaction.currencyRate =
+          double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
       transaction.calculatedAmount = double.parse(_currencyController.text) * transaction.currencyRate!;
     }
     transaction.type = TransactionType.expense;
@@ -792,7 +808,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
     toCurrency.kod = selectedAccount!.code;
     if (installmentCount != null && installmentDate != null) {
       var amount = double.parse(_currencyController.text) / installmentCount!;
-      double exchangeRate = double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
+      double exchangeRate =
+          double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
       List<InstallmentModel> installments = [];
       for (int i = 0; i < installmentCount!; i++) {
         installments.add(
@@ -818,7 +835,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
 
   // Income
   Future<void> transactionCalculateForIncome(TransactionModel transaction) async {
-    double exchangeRate = double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
+    double exchangeRate =
+        double.tryParse(_exchangeRateController.text) == 0.0 ? 1.0 : double.parse(_exchangeRateController.text);
     transaction.date = paymentDate!;
     transaction.type = TransactionType.income;
     transaction.currencyRate = exchangeRate;
@@ -882,7 +900,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   Future<bool> transactionExchangeRateCheck(TransactionModel transaction) async {
     switch (_pageStateNotifier.value) {
       case PaymentSelectionState.transfer:
-        var correctedValue = calculateCurrencyExchange(transaction.amount, transaction.currencyRate!, transaction.currencyCode, transaction.toCurrencyCode);
+        var correctedValue = calculateCurrencyExchange(
+            transaction.amount, transaction.currencyRate!, transaction.currencyCode, transaction.toCurrencyCode);
         transaction.amount -= correctedValue['remainingRefund'];
         transaction.calculatedAmount = double.parse(correctedValue['totalConverted'].toString());
         bool completed = true;
@@ -915,14 +934,16 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
         return completed;
       default:
         if (transaction.currencyCode != transaction.toCurrencyCode) {
-          var correctedValue = calculateCurrencyExchange(transaction.amount, transaction.currencyRate!, transaction.currencyCode, transaction.toCurrencyCode);
+          var correctedValue = calculateCurrencyExchange(
+              transaction.amount, transaction.currencyRate!, transaction.currencyCode, transaction.toCurrencyCode);
           transaction.calculatedAmount = double.parse(correctedValue['totalConverted'].toString());
           bool completed = await showDialog(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: const Text('Bilgilendirme'),
-                    content: Text('Hesaplanan Tutar: ${transaction.calculatedAmount?.toStringAsFixed(2)} ${transaction.toCurrencyCode}'),
+                    content: Text(
+                        'Hesaplanan Tutar: ${transaction.calculatedAmount?.toStringAsFixed(2)} ${transaction.toCurrencyCode}'),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () {
@@ -948,7 +969,8 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   }
 }
 
-Map<String, dynamic> calculateCurrencyExchange(double amount, double exchangeRate, String fromCurrency, String toCurrency) {
+Map<String, dynamic> calculateCurrencyExchange(
+    double amount, double exchangeRate, String fromCurrency, String toCurrency) {
   double totalTargetCurrency = amount * exchangeRate;
 
   int wholeTargetCurrency = totalTargetCurrency.floor();
@@ -956,5 +978,10 @@ Map<String, dynamic> calculateCurrencyExchange(double amount, double exchangeRat
   double remainingTargetCurrency = totalTargetCurrency - wholeTargetCurrency;
   double remainingFromCurrency = (remainingTargetCurrency / exchangeRate).floor().toDouble();
 
-  return {'fromCurrency': fromCurrency, 'toCurrency': toCurrency, 'totalConverted': wholeTargetCurrency, 'remainingRefund': remainingFromCurrency};
+  return {
+    'fromCurrency': fromCurrency,
+    'toCurrency': toCurrency,
+    'totalConverted': wholeTargetCurrency,
+    'remainingRefund': remainingFromCurrency
+  };
 }

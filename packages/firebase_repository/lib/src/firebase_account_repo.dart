@@ -23,19 +23,6 @@ class FirebaseAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<void> createSpesificAccountForUser(AccountModel account) async {
-    final userAccount = await userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').get();
-    if (userAccount.exists) {
-      UserModel user = UserModel.fromMap(userAccount.data()!);
-      if (checkIfAccountAlreadyExists(user, account)) {
-        return;
-      }
-      user.accounts.add(account);
-      return userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').set(user.toMap());
-    }
-  }
-
-  @override
   Future<List<AccountModel>> fetchUserAccounts() async {
     final userAccount = await userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').get();
     if (userAccount.exists) {
@@ -63,7 +50,8 @@ class FirebaseAccountRepository implements AccountRepository {
     }
   }
 
-  bool checkIfAccountAlreadyExists(UserModel user, AccountModel account) => user.accounts.firstWhereOrNull((element) => element.code == account.code) != null;
+  bool checkIfAccountAlreadyExists(UserModel user, AccountModel account) =>
+      user.accounts.firstWhereOrNull((element) => element.code == account.code) != null;
 
   @override
   Future<void> updateUserAccount(TransactionModel transaction) async {
@@ -72,18 +60,39 @@ class FirebaseAccountRepository implements AccountRepository {
       UserModel user = UserModel.fromMap(userAccount.data()!);
       switch (transaction.type) {
         case TransactionType.income:
-          user.accounts.firstWhereOrNull((element) => element.code == transaction.toCurrencyCode)?.balance += transaction.calculatedAmount!;
+          user.accounts.firstWhereOrNull((element) => element.code == transaction.toCurrencyCode)?.balance +=
+              transaction.calculatedAmount!;
           break;
         case TransactionType.expense:
-          user.accounts.firstWhereOrNull((element) => element.code == transaction.toCurrencyCode)?.balance -= transaction.calculatedAmount!;
+          user.accounts.firstWhereOrNull((element) => element.code == transaction.toCurrencyCode)?.balance -=
+              transaction.calculatedAmount!;
           break;
         case TransactionType.transfer:
-          user.accounts.firstWhereOrNull((element) => element.code == transaction.currencyCode)?.balance -= transaction.amount;
-          user.accounts.firstWhereOrNull((element) => element.code == transaction.toCurrencyCode)?.balance += transaction.calculatedAmount!;
+          user.accounts.firstWhereOrNull((element) => element.code == transaction.currencyCode)?.balance -=
+              transaction.amount;
+          user.accounts.firstWhereOrNull((element) => element.code == transaction.toCurrencyCode)?.balance +=
+              transaction.calculatedAmount!;
           break;
         default:
       }
       return userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').set(user.toMap());
+    }
+  }
+
+  @override
+  Future<void> createUserAccount(AccountModel account) async {
+    final userAccount = await userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').get();
+    if (userAccount.exists) {
+      UserModel user = UserModel.fromMap(userAccount.data()!);
+      if (checkIfAccountAlreadyExists(user, account)) {
+        return;
+      }
+      user.accounts.add(account);
+      return userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').set(user.toMap());
+    } else {
+      UserModel user = UserModel(userId: getCurrenUser()?.uid ?? 'testUser');
+      user.accounts.add(account);
+      userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').set(user.toMap());
     }
   }
 }

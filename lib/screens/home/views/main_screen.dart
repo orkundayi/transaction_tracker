@@ -3,15 +3,15 @@ import 'dart:async';
 import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application/blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
-import 'package:flutter_application/blocs/user_account_cubit/user_account_cubit.dart';
+import 'package:flutter_application/blocs/get_all_transaction/get_all_transaction_bloc.dart';
+import 'package:flutter_application/blocs/user_account/user_account_cubit.dart';
 import 'package:flutter_application/screens/transactions/views/all_transactions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 
-import '../../../blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
-import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
+import '../../../blocs/get_user_accounts/get_user_accounts_bloc.dart';
+import '../../../blocs/get_user_transactions/get_user_transactions_bloc.dart';
 import 'total_balance_card.dart';
 
 class MainScreen extends StatefulWidget {
@@ -122,6 +122,11 @@ class _MainScreenState extends State<MainScreen> {
                   onAccountChanged: () async {
                     Timer(const Duration(milliseconds: 500), () {
                       transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+                    });
+                  },
+                  onAccountCreated: () {
+                    Timer(const Duration(milliseconds: 500), () {
+                      userAccountBloc.add(FetchUserAccounts());
                     });
                   },
                 ),
@@ -263,7 +268,9 @@ class _MainScreenState extends State<MainScreen> {
                                               Container(
                                                 padding: const EdgeInsets.all(10),
                                                 decoration: BoxDecoration(
-                                                  color: transaction.type == TransactionType.income ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                                                  color: transaction.type == TransactionType.income
+                                                      ? Colors.green.withOpacity(0.2)
+                                                      : Colors.red.withOpacity(0.2),
                                                   shape: BoxShape.circle,
                                                 ),
                                                 child: getCategoryIcon(transaction.category?.type),

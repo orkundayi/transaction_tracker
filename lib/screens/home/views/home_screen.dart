@@ -7,11 +7,11 @@ import 'package:flutter_application/screens/home/views/main_screen.dart';
 import 'package:flutter_application/screens/stats/stats_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../blocs/create_transaction_bloc/create_transaction_bloc.dart';
-import '../../../blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
-import '../../../blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
-import '../../../blocs/get_user_transactions_bloc/get_user_transactions_bloc.dart';
-import '../../../blocs/user_account_cubit/user_account_cubit.dart';
+import '../../../blocs/create_transaction/create_transaction_bloc.dart';
+import '../../../blocs/get_all_transaction/get_all_transaction_bloc.dart';
+import '../../../blocs/get_user_accounts/get_user_accounts_bloc.dart';
+import '../../../blocs/get_user_transactions/get_user_transactions_bloc.dart';
+import '../../../blocs/user_account/user_account_cubit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

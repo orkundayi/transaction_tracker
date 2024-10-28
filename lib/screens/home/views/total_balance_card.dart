@@ -3,16 +3,18 @@ import 'dart:async';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application/blocs/get_all_transaction_bloc/get_all_transaction_bloc.dart';
-import 'package:flutter_application/blocs/get_user_accounts_bloc/get_user_accounts_bloc.dart';
-import 'package:flutter_application/blocs/user_account_cubit/user_account_cubit.dart';
+import 'package:flutter_application/blocs/get_all_transaction/get_all_transaction_bloc.dart';
+import 'package:flutter_application/blocs/get_user_accounts/get_user_accounts_bloc.dart';
+import 'package:flutter_application/blocs/user_account/user_account_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../blocs/create_user_account/create_user_account_bloc.dart';
 import '../../create_account/create_account_screen.dart';
 
 class TotalBalanceCard extends StatefulWidget {
   final Function() onAccountChanged;
-  const TotalBalanceCard({super.key, required this.onAccountChanged});
+  final Function() onAccountCreated;
+  const TotalBalanceCard({super.key, required this.onAccountChanged, required this.onAccountCreated});
 
   @override
   State<TotalBalanceCard> createState() => _TotalBalanceCardState();
@@ -67,7 +69,8 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
 
           setState(() {
             _loadedOnce = true;
-            userAccountCubit.updateIndex(_currentIndex, accounts.length == _currentIndex ? null : accounts[_currentIndex]);
+            userAccountCubit.updateIndex(
+                _currentIndex, accounts.length == _currentIndex ? null : accounts[_currentIndex]);
           });
         } else if (state is AccountFetchError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -86,20 +89,23 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                   enlargeCenterPage: true,
                   onPageChanged: (index, reason) {
                     _currentIndex = index;
-                    userAccountCubit.updateIndex(_currentIndex, accounts.length == _currentIndex ? null : accounts[_currentIndex]);
+                    userAccountCubit.updateIndex(
+                        _currentIndex, accounts.length == _currentIndex ? null : accounts[_currentIndex]);
                     if (userAccountCubit.currentAccount != null && userAccountCubit.previousAccount != null) {
                       widget.onAccountChanged();
                     }
                   },
                   height: 180,
                   enableInfiniteScroll: false,
-                  initialPage: context.watch<UserAccountCubit>().state is UserAccountIndexUpdated ? (context.watch<UserAccountCubit>().currentIndex) : 0,
+                  initialPage: context.watch<UserAccountCubit>().state is UserAccountIndexUpdated
+                      ? (context.watch<UserAccountCubit>().currentIndex)
+                      : 0,
                   scrollPhysics: const AlwaysScrollableScrollPhysics(),
                 ),
                 carouselController: _carouselSliderController,
                 itemBuilder: (context, index, realIndex) {
                   if (index == accounts.length) {
-                    return const CreateNewAccountCard();
+                    return CreateNewAccountCard(onAccountCreated: widget.onAccountCreated);
                   }
                   final account = accounts[index];
                   return AccountCard(account: account);
@@ -120,7 +126,9 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
     if (transaction.installments != null) {
       return findInstallMentForThisMonth(transaction);
     } else {
-      return (transaction.calculatedAmount != null && transaction.calculatedAmount != 0.0) ? transaction.calculatedAmount! : transaction.amount;
+      return (transaction.calculatedAmount != null && transaction.calculatedAmount != 0.0)
+          ? transaction.calculatedAmount!
+          : transaction.amount;
     }
   }
 
@@ -128,7 +136,9 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
     final now = DateTime.now().toLocal();
     final currentMonth = now.month;
     final currentYear = now.year;
-    final installment = transaction.installments!.firstWhere((i) => i.dueDate.month == currentMonth && i.dueDate.year == currentYear, orElse: () => InstallmentModel.empty());
+    final installment = transaction.installments!.firstWhere(
+        (i) => i.dueDate.month == currentMonth && i.dueDate.year == currentYear,
+        orElse: () => InstallmentModel.empty());
     return installment.calculatedAmount != 0.0 ? installment.calculatedAmount : installment.amount;
   }
 }
@@ -196,7 +206,8 @@ class AccountCard extends StatelessWidget {
 }
 
 class CreateNewAccountCard extends StatefulWidget {
-  const CreateNewAccountCard({super.key});
+  const CreateNewAccountCard({super.key, required this.onAccountCreated});
+  final Function() onAccountCreated;
 
   @override
   State<CreateNewAccountCard> createState() => _CreateNewAccountCardState();
@@ -207,17 +218,29 @@ class _CreateNewAccountCardState extends State<CreateNewAccountCard> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        // TODO: Action to create a new account
         CurrencyRates? currencyRates = await getCurrencyRates();
         if (currencyRates != null && context.mounted) {
-          Navigator.of(context).push(
+          final bool isAccountCreated = await Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => BlocProvider(
-                create: (context) => GetUserAccountsBloc(FirebaseAccountRepository()),
+              builder: (context) => MultiBlocProvider(
+                providers: [
+                  BlocProvider(
+                    create: (context) => GetUserAccountsBloc(FirebaseAccountRepository()),
+                  ),
+                  BlocProvider(
+                    create: (context) => CreateUserAccountBloc(FirebaseAccountRepository()),
+                  ),
+                ],
                 child: CreateAccountScreen(currencyRates: currencyRates),
               ),
             ),
           );
+          if (isAccountCreated && context.mounted) {
+            widget.onAccountCreated();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Hesap başarıyla oluşturuldu.')),
+            );
+          }
         } else {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
