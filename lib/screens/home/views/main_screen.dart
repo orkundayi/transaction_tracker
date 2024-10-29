@@ -115,6 +115,7 @@ class _MainScreenState extends State<MainScreen> {
               MultiBlocProvider(
                 providers: [
                   BlocProvider.value(value: transactionsBloc),
+                  BlocProvider.value(value: allTransactionsBloc),
                   BlocProvider.value(value: userAccountBloc),
                   BlocProvider.value(value: userAccountCubit),
                 ],

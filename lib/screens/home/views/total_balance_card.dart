@@ -8,7 +8,11 @@ import 'package:flutter_application/blocs/get_user_accounts/get_user_accounts_bl
 import 'package:flutter_application/blocs/user_account/user_account_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../blocs/create_transaction/create_transaction_bloc.dart';
 import '../../../blocs/create_user_account/create_user_account_bloc.dart';
+import '../../../blocs/get_user_transactions/get_user_transactions_bloc.dart';
+import '../../../blocs/update_user_account/update_user_account_bloc.dart';
+import '../../add_transaction/views/add_transaction.dart';
 import '../../create_account/create_account_screen.dart';
 
 class TotalBalanceCard extends StatefulWidget {
@@ -27,14 +31,16 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   List<AccountModel> accounts = [];
 
   bool _loadedOnce = false;
-  late GetAllTransactionBloc transactionsBloc;
+  late GetAllTransactionBloc allTransactionsBloc;
+  late GetUserTransactionsBloc transactionsBloc;
   late GetUserAccountsBloc getUserAccountsBloc;
   late UserAccountCubit userAccountCubit;
   late Timer _timer;
 
   @override
   void initState() {
-    transactionsBloc = context.read<GetAllTransactionBloc>();
+    allTransactionsBloc = context.read<GetAllTransactionBloc>();
+    transactionsBloc = context.read<GetUserTransactionsBloc>();
     getUserAccountsBloc = context.read<GetUserAccountsBloc>();
     userAccountCubit = context.read<UserAccountCubit>();
     calculateTotalBalance();
@@ -51,7 +57,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   }
 
   void calculateTotalBalance() {
-    transactionsBloc.add(FetchAllTransactions());
+    allTransactionsBloc.add(FetchAllTransactions());
     getUserAccountsBloc.add(FetchUserAccounts());
   }
 
@@ -108,7 +114,14 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                     return CreateNewAccountCard(onAccountCreated: widget.onAccountCreated);
                   }
                   final account = accounts[index];
-                  return AccountCard(account: account);
+                  return MultiBlocProvider(
+                    providers: [
+                      BlocProvider.value(value: allTransactionsBloc),
+                      BlocProvider.value(value: transactionsBloc),
+                      BlocProvider.value(value: getUserAccountsBloc),
+                    ],
+                    child: AccountCard(account: account),
+                  );
                 },
               ),
             )
@@ -143,9 +156,26 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   }
 }
 
-class AccountCard extends StatelessWidget {
+class AccountCard extends StatefulWidget {
   final AccountModel account;
   const AccountCard({super.key, required this.account});
+
+  @override
+  State<AccountCard> createState() => _AccountCardState();
+}
+
+class _AccountCardState extends State<AccountCard> {
+  late GetAllTransactionBloc allTransactionsBloc;
+  late GetUserTransactionsBloc transactionsBloc;
+  late GetUserAccountsBloc getUserAccountsBloc;
+
+  @override
+  void initState() {
+    allTransactionsBloc = context.read<GetAllTransactionBloc>();
+    transactionsBloc = context.read<GetUserTransactionsBloc>();
+    getUserAccountsBloc = context.read<GetUserAccountsBloc>();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,42 +196,95 @@ class AccountCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                backgroundImage: getCurrencyFlagFromCurrencyCode(account.code).image,
-                radius: 16,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.8,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    backgroundImage: getCurrencyFlagFromCurrencyCode(widget.account.code).image,
+                    radius: 16,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      widget.account.name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              Text(
-                account.name,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 10),
           const Divider(
             color: Colors.black54,
             thickness: 1,
           ),
-          const SizedBox(height: 10),
-          Text(
-            '${account.balance.toStringAsFixed(2)} ${getCurrencySymbolFromCurrencyCode(account.code)}',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Text(
+                '${formatBalance(widget.account.balance)} ${getCurrencySymbolFromCurrencyCode(widget.account.code)}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await Navigator.of(context)
+                      .push(
+                    MaterialPageRoute(
+                      builder: (context) => MultiBlocProvider(
+                        providers: [
+                          BlocProvider(
+                            create: (context) => CreateTransactionBloc(FirebaseTransactionRepository()),
+                          ),
+                          BlocProvider(
+                            create: (context) => UpdateUserAccountBloc(FirebaseAccountRepository()),
+                          ),
+                        ],
+                        child: AddTransactionPage(account: widget.account),
+                      ),
+                    ),
+                  )
+                      .then((_) {
+                    if (context.mounted) {
+                      Future.delayed(const Duration(milliseconds: 500), () {
+                        transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+                        getUserAccountsBloc.add(FetchUserAccounts());
+                        allTransactionsBloc.add(FetchAllTransactions());
+                      });
+                    }
+                  });
+                },
+                child: const Text('Gelir/Gider Ekle'),
+              ),
+            ],
           ),
         ],
       ),
     );
+  }
+
+  String formatBalance(double balance) {
+    String balanceString = balance.toStringAsFixed(2);
+
+    if (balanceString.length > 6) {
+      return '${balanceString.substring(0, 6)}...';
+    }
+
+    return balanceString;
   }
 }
 

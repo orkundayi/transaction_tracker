@@ -14,7 +14,8 @@ import '../../../blocs/update_user_account/update_user_account_bloc.dart';
 import 'user_account_selector/user_account_selector.dart';
 
 class AddTransactionPage extends StatefulWidget {
-  const AddTransactionPage({super.key});
+  final AccountModel? account;
+  const AddTransactionPage({super.key, this.account});
 
   @override
   State<AddTransactionPage> createState() => _AddPaymentSelectionState();
@@ -47,7 +48,17 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
   @override
   void initState() {
     getCurrencyRates();
+    setAccount();
     super.initState();
+  }
+
+  void setAccount() {
+    if (widget.account != null) {
+      selectedAccount = widget.account;
+      _currentCurrencyCode = selectedAccount!.code;
+      _currentIcon = getCurrencySymbolFromCurrencyCode(selectedAccount!.code);
+      _exchangeRateController.text = '1.0';
+    }
   }
 
   Future<void> getCurrencyRates() async {

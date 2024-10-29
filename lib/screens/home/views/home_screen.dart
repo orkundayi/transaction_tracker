@@ -49,7 +49,6 @@ class _HomeScreenState extends State<HomeScreen> {
               BlocProvider.value(value: allTransactionsBloc),
               BlocProvider.value(value: transactionsBloc),
               BlocProvider.value(value: accountsBloc),
-              BlocProvider.value(value: accountsBloc),
               BlocProvider.value(value: userAccountCubit),
             ],
             child: const MainScreen(),
