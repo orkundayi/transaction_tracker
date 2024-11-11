@@ -40,7 +40,8 @@ class FirebaseTransactionRepository implements TransactionRepository {
   }
 
   @override
-  Future<List<TransactionModel>> fetchTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate}) {
+  Future<List<TransactionModel>> fetchTransactionsForUser(TransactionType type,
+      {DateTime? firstDate, DateTime? lastDate}) {
     return transactionCollection
         .where('userId', isEqualTo: getCurrenUser()?.uid ?? 'testUser')
         .where('type', isEqualTo: type.name)
@@ -58,8 +59,11 @@ class FirebaseTransactionRepository implements TransactionRepository {
   }
 
   @override
-  Future<List<TransactionModel>> fetchLastTransactionsForUser(TransactionType type, {DateTime? firstDate, DateTime? lastDate, AccountModel? account}) {
-    Query query = transactionCollection.where('userId', isEqualTo: getCurrenUser()?.uid ?? 'testUser').where('type', isEqualTo: type.name);
+  Future<List<TransactionModel>> fetchLastTransactionsForUser(TransactionType type,
+      {DateTime? firstDate, DateTime? lastDate, AccountModel? account}) {
+    Query query = transactionCollection
+        .where('userId', isEqualTo: getCurrenUser()?.uid ?? 'testUser')
+        .where('type', isEqualTo: type.name);
 
     if (account != null) {
       query = query.where('accountCode', isEqualTo: account.code);
@@ -104,5 +108,21 @@ class FirebaseTransactionRepository implements TransactionRepository {
 
   User? getCurrenUser() {
     return FirebaseAuth.instance.currentUser;
+  }
+
+  @override
+  Future<TransactionModel?> fetchTransaction(String transactionId) {
+    return transactionCollection.doc(transactionId).get().then((doc) {
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null) {
+          return TransactionModel.fromMap(data);
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    });
   }
 }

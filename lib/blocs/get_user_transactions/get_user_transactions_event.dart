@@ -21,3 +21,8 @@ class FetchLastTransactions extends GetTransactionEvent {
   final TransactionType? type;
   const FetchLastTransactions(this.type);
 }
+
+class FetchSingleTransaction extends GetTransactionEvent {
+  final String transactionId;
+  const FetchSingleTransaction(this.transactionId);
+}

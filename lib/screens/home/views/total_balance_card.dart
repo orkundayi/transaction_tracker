@@ -228,49 +228,55 @@ class _AccountCardState extends State<AccountCard> {
             thickness: 1,
           ),
           const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Text(
-                '${formatBalance(widget.account.balance)} ${getCurrencySymbolFromCurrencyCode(widget.account.code)}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  await Navigator.of(context)
-                      .push(
-                    MaterialPageRoute(
-                      builder: (context) => MultiBlocProvider(
-                        providers: [
-                          BlocProvider(
-                            create: (context) => CreateTransactionBloc(FirebaseTransactionRepository()),
-                          ),
-                          BlocProvider(
-                            create: (context) => UpdateUserAccountBloc(FirebaseAccountRepository()),
-                          ),
-                        ],
-                        child: AddTransactionPage(account: widget.account),
-                      ),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.8,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(
+                    '${formatBalance(widget.account.balance)} ${getCurrencySymbolFromCurrencyCode(widget.account.code)}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
-                  )
-                      .then((_) {
-                    if (context.mounted) {
-                      Future.delayed(const Duration(milliseconds: 500), () {
-                        transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
-                        getUserAccountsBloc.add(FetchUserAccounts());
-                        allTransactionsBloc.add(FetchAllTransactions());
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await Navigator.of(context)
+                          .push(
+                        MaterialPageRoute(
+                          builder: (context) => MultiBlocProvider(
+                            providers: [
+                              BlocProvider(
+                                create: (context) => CreateTransactionBloc(FirebaseTransactionRepository()),
+                              ),
+                              BlocProvider(
+                                create: (context) => UpdateUserAccountBloc(FirebaseAccountRepository()),
+                              ),
+                            ],
+                            child: AddTransactionPage(account: widget.account),
+                          ),
+                        ),
+                      )
+                          .then((_) {
+                        if (context.mounted) {
+                          Future.delayed(const Duration(milliseconds: 500), () {
+                            transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
+                            getUserAccountsBloc.add(FetchUserAccounts());
+                            allTransactionsBloc.add(FetchAllTransactions());
+                          });
+                        }
                       });
-                    }
-                  });
-                },
-                child: const Text('Gelir/Gider Ekle'),
+                    },
+                    child: const Text('Gelir/Gider Ekle'),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ],
       ),

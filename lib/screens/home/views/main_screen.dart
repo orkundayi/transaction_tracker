@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import '../../../blocs/get_user_accounts/get_user_accounts_bloc.dart';
 import '../../../blocs/get_user_transactions/get_user_transactions_bloc.dart';
 import 'total_balance_card.dart';
+import 'transaction_detail_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -254,8 +255,16 @@ class _MainScreenState extends State<MainScreen> {
                                     return Padding(
                                       padding: EdgeInsets.only(bottom: index != transactions.length - 1 ? 8 : 0),
                                       child: InkWell(
-                                        onTap: () {
-                                          // TODO: Navigate to transaction detail page
+                                        onTap: () async {
+                                          await Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) => BlocProvider.value(
+                                                value: transactionsBloc,
+                                                child: TransactionDetailScreen(transactionId: transaction.id),
+                                              ),
+                                            ),
+                                          );
+                                          transactionsBloc.add(FetchLastTransactions(transactionsBloc.transactionType));
                                         },
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),

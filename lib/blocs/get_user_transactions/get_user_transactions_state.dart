@@ -13,6 +13,12 @@ final class TransactionFetchSuccess extends FetchTransactionState {
   TransactionFetchSuccess(this.transactions);
 }
 
+final class SingleTransactionFetchSuccess extends FetchTransactionState {
+  final TransactionModel transaction;
+
+  SingleTransactionFetchSuccess(this.transaction);
+}
+
 final class TransactionFetchError extends FetchTransactionState {
   final Object error;
 

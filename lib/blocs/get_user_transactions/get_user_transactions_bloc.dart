@@ -81,5 +81,19 @@ class GetUserTransactionsBloc extends Bloc<GetTransactionEvent, FetchTransaction
         emit(TransactionFetchError(e));
       }
     });
+
+    on<FetchSingleTransaction>((event, emit) async {
+      emit(TransactionFetchingInProgress());
+      try {
+        final transaction = await transactionRepository.fetchTransaction(event.transactionId);
+        if (transaction == null) {
+          emit(TransactionFetchError(Exception('Transaction not found')));
+          return;
+        }
+        emit(SingleTransactionFetchSuccess(transaction));
+      } catch (e) {
+        emit(TransactionFetchError(e));
+      }
+    });
   }
 }
