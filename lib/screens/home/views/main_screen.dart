@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_repository/firebase_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application/blocs/admin_helper/admin_helper_cubit.dart';
 import 'package:flutter_application/blocs/get_all_transaction/get_all_transaction_bloc.dart';
 import 'package:flutter_application/blocs/user_account/user_account_cubit.dart';
 import 'package:flutter_application/screens/transactions/views/all_transactions.dart';
@@ -23,12 +24,14 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  late AdminHelperCubit adminHelperCubit;
   late GetUserTransactionsBloc transactionsBloc;
   late GetAllTransactionBloc allTransactionsBloc;
   late GetUserAccountsBloc userAccountBloc;
   late UserAccountCubit userAccountCubit;
   @override
   void initState() {
+    adminHelperCubit = context.read<AdminHelperCubit>();
     transactionsBloc = context.read<GetUserTransactionsBloc>();
     allTransactionsBloc = context.read<GetAllTransactionBloc>();
     userAccountBloc = context.read<GetUserAccountsBloc>();
@@ -104,7 +107,9 @@ class _MainScreenState extends State<MainScreen> {
                           ],
                         ),
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            adminHelperCubit.setIsAdmin(false);
+                          },
                           icon: const Icon(CupertinoIcons.settings),
                         ),
                       ],
