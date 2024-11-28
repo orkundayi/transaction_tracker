@@ -12,11 +12,16 @@ enum PaymentSelectionState {
 class PaymentSelectorWidget extends StatefulWidget {
   final CategoryType categoryType;
   final ValueNotifier<PaymentSelectionState> pageStateNotifier;
-  final Function(bool isInstallment, DateTime? paymentDate, DateTime? installmentDate, String installmentCount) onDataChangedForExpense;
+  final Function(bool isInstallment, DateTime? paymentDate, DateTime? installmentDate, String installmentCount)
+      onDataChangedForExpense;
   final Function(DateTime? paymentDate) onDataChangedForIncome;
 
   const PaymentSelectorWidget(
-      {super.key, required this.pageStateNotifier, required this.onDataChangedForExpense, required this.onDataChangedForIncome, required this.categoryType});
+      {super.key,
+      required this.pageStateNotifier,
+      required this.onDataChangedForExpense,
+      required this.onDataChangedForIncome,
+      required this.categoryType});
 
   @override
   State<PaymentSelectorWidget> createState() => _PaymentSelectorWidgetState();
