@@ -310,20 +310,21 @@ class _CreateNewAccountCardState extends State<CreateNewAccountCard> {
         CurrencyRates? currencyRates = await getCurrencyRates();
         if (currencyRates != null && context.mounted) {
           final bool isAccountCreated = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => MultiBlocProvider(
-                providers: [
-                  BlocProvider(
-                    create: (context) => GetUserAccountsBloc(FirebaseAccountRepository()),
+                MaterialPageRoute(
+                  builder: (context) => MultiBlocProvider(
+                    providers: [
+                      BlocProvider(
+                        create: (context) => GetUserAccountsBloc(FirebaseAccountRepository()),
+                      ),
+                      BlocProvider(
+                        create: (context) => CreateUserAccountBloc(FirebaseAccountRepository()),
+                      ),
+                    ],
+                    child: CreateAccountScreen(currencyRates: currencyRates),
                   ),
-                  BlocProvider(
-                    create: (context) => CreateUserAccountBloc(FirebaseAccountRepository()),
-                  ),
-                ],
-                child: CreateAccountScreen(currencyRates: currencyRates),
-              ),
-            ),
-          );
+                ),
+              ) ??
+              false;
           if (isAccountCreated && context.mounted) {
             widget.onAccountCreated();
             ScaffoldMessenger.of(context).showSnackBar(
