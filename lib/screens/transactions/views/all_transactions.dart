@@ -120,7 +120,7 @@ class _AllTransactionsState extends State<AllTransactions> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withAlpha(80),
                     blurRadius: 10,
                     spreadRadius: 1,
                   ),
@@ -132,8 +132,8 @@ class _AllTransactionsState extends State<AllTransactions> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: transaction.type == TransactionType.income
-                          ? Colors.green.withOpacity(0.2)
-                          : Colors.red.withOpacity(0.2),
+                          ? Colors.green.withAlpha(80)
+                          : Colors.red.withAlpha(80),
                       shape: BoxShape.circle,
                     ),
                     child: getCategoryIcon(transaction.category?.type),
@@ -188,7 +188,7 @@ class _AllTransactionsState extends State<AllTransactions> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6)],
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(80), blurRadius: 6)],
       ),
       child: DropdownButton(
         value: context.watch<GetUserTransactionsBloc>().transactionType,
@@ -228,7 +228,7 @@ class _AllTransactionsState extends State<AllTransactions> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6)],
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(80), blurRadius: 6)],
       ),
       child: InkWell(
         onTap: () async {

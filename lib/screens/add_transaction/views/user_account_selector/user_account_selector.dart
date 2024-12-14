@@ -108,7 +108,7 @@ class _UserAccountSelectorState extends State<UserAccountSelector> {
                       ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.9,
                   height: kToolbarHeight,

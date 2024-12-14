@@ -75,7 +75,6 @@ class GetUserTransactionsBloc extends Bloc<GetTransactionEvent, FetchTransaction
             final transactions = await transactionRepository.fetchLastTransactionsForUser(_transactionType,
                 firstDate: event.dateRange?.start, lastDate: event.dateRange?.end);
             emit(TransactionFetchSuccess(transactions));
-          default:
         }
       } catch (e) {
         emit(TransactionFetchError(e));

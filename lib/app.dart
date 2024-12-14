@@ -45,8 +45,7 @@ class _MyAppState extends State<MyApp> {
                   return const AuthScreen();
                 }
               case ConnectionState.none:
-              default:
-                return const AuthScreen();
+              return const AuthScreen();
             }
           },
         ),

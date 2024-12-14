@@ -83,7 +83,7 @@ class AuthScreenState extends State<AuthScreen> {
         },
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
         child: InkWell(
           onTap: () {
             //TODO: Do Login Or Register Process
@@ -133,7 +133,7 @@ class AuthScreenState extends State<AuthScreen> {
               border: Border.all(
                 color: themeData.colorScheme.primary,
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Center(child: Text('Devam Et')),
           ),

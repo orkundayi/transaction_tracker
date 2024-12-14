@@ -458,64 +458,67 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        height: 68,
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(16),
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 20,
-              offset: Offset(0, -10),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Container(
+          height: 68,
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(16),
             ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: TextButton(
-          onPressed: () async {
-            late bool complete;
-            try {
-              transaction.amount = double.parse(_currencyController.text);
-              transaction.currencyCode = _currentCurrencyCode;
-              transaction.category = CategoryModel.empty(CategoryType.otherExpense);
-              transaction.category!.name =
-                  _categoryController.text == 'Kategori Seçin' ? 'Diğer' : _categoryController.text;
-              transaction.category!.type = categoryType;
-              await transactionCalculate(transaction);
-              complete = await transactionExchangeRateCheck(transaction);
-              if (!complete) {
-                return;
-              }
-              if (context.mounted) {
-                context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
-              }
-              if (context.mounted) {
-                context.read<UpdateUserAccountBloc>().add(UpdateUserAccountEvent(transaction: transaction));
-              }
-            } catch (e) {
-              log(e.toString());
-            } finally {
-              if (context.mounted && complete) {
-                Navigator.pop(context, true);
-              }
-            }
-          },
-          style: TextButton.styleFrom(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            shadowColor: Colors.black,
-            elevation: 1,
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 20,
+                offset: Offset(0, -10),
+              ),
+            ],
           ),
-          child: const Text(
-            'Kaydet',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: TextButton(
+            onPressed: () async {
+              late bool complete;
+              try {
+                transaction.amount = double.parse(_currencyController.text);
+                transaction.currencyCode = _currentCurrencyCode;
+                transaction.category = CategoryModel.empty(CategoryType.otherExpense);
+                transaction.category!.name =
+                    _categoryController.text == 'Kategori Seçin' ? 'Diğer' : _categoryController.text;
+                transaction.category!.type = categoryType;
+                await transactionCalculate(transaction);
+                complete = await transactionExchangeRateCheck(transaction);
+                if (!complete) {
+                  return;
+                }
+                if (context.mounted) {
+                  context.read<CreateTransactionBloc>().add(CreateTransaction(transaction: transaction));
+                }
+                if (context.mounted) {
+                  context.read<UpdateUserAccountBloc>().add(UpdateUserAccountEvent(transaction: transaction));
+                }
+              } catch (e) {
+                log(e.toString());
+              } finally {
+                if (context.mounted && complete) {
+                  Navigator.pop(context, true);
+                }
+              }
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              shadowColor: Colors.black,
+              elevation: 1,
+            ),
+            child: const Text(
+              'Kaydet',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -533,21 +536,17 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
         return Alignment.topCenter;
       case PaymentSelectionState.transfer:
         return Alignment.topRight;
-      default:
-        return Alignment.topLeft;
     }
   }
 
   Color _getContainerColor() {
     switch (_pageStateNotifier.value) {
       case PaymentSelectionState.expense:
-        return Colors.redAccent.withOpacity(0.2);
+        return Colors.redAccent.withAlpha(80);
       case PaymentSelectionState.income:
-        return Colors.greenAccent.withOpacity(0.2);
+        return Colors.greenAccent.withAlpha(80);
       case PaymentSelectionState.transfer:
-        return const Color.fromARGB(255, 61, 124, 153).withOpacity(0.2);
-      default:
-        return Colors.grey.withOpacity(0.2);
+        return const Color.fromARGB(255, 61, 124, 153).withAlpha(80);
     }
   }
 
@@ -631,7 +630,7 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
                           color: _getContainerColor(),
                           width: 2,
                         ),
-                        color: _getContainerColor().withOpacity(0.05),
+                        color: _getContainerColor().withAlpha(80),
                         boxShadow: const [
                           BoxShadow(
                             color: Colors.black12,
@@ -788,7 +787,6 @@ class _AddPaymentSelectionState extends State<AddTransactionPage> {
         transaction.amount = double.parse(_currencyController.text);
         transaction.calculatedAmount = double.parse(_currencyController.text) * transaction.currencyRate!;
         break;
-      default:
     }
   }
 

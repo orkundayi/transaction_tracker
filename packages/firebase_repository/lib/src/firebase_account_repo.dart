@@ -73,7 +73,6 @@ class FirebaseAccountRepository implements AccountRepository {
           user.accounts.firstWhereOrNull((element) => element.code == transaction.toCurrencyCode)?.balance +=
               transaction.calculatedAmount!;
           break;
-        default:
       }
       return userAccountCollection.doc(getCurrenUser()?.uid ?? 'testUser').set(user.toMap());
     }

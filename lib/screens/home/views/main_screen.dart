@@ -151,7 +151,7 @@ class _MainScreenState extends State<MainScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                              color: Theme.of(context).colorScheme.primary,
                               width: 1,
                             ),
                           ),
@@ -207,7 +207,7 @@ class _MainScreenState extends State<MainScreen> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                                color: Theme.of(context).colorScheme.primary,
                                 width: 1,
                               ),
                             ),
@@ -275,7 +275,7 @@ class _MainScreenState extends State<MainScreen> {
                                           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                                           decoration: BoxDecoration(
                                             color: Colors.white,
-                                            border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                                            border: Border.all(color: Colors.grey.withAlpha(80)),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Row(
@@ -284,8 +284,8 @@ class _MainScreenState extends State<MainScreen> {
                                                 padding: const EdgeInsets.all(10),
                                                 decoration: BoxDecoration(
                                                   color: transaction.type == TransactionType.income
-                                                      ? Colors.green.withOpacity(0.2)
-                                                      : Colors.red.withOpacity(0.2),
+                                                      ? Colors.green.withAlpha(80)
+                                                      : Colors.red.withAlpha(80),
                                                   shape: BoxShape.circle,
                                                 ),
                                                 child: getCategoryIcon(transaction.category?.type),

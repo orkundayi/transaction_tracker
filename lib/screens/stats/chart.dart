@@ -154,9 +154,9 @@ class _MyChartState extends State<MyChart> {
           width: 12,
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.7),
-              Theme.of(context).colorScheme.secondary.withOpacity(0.7),
-              Theme.of(context).colorScheme.tertiary.withOpacity(0.7),
+              Theme.of(context).colorScheme.primary.withAlpha(120),
+              Theme.of(context).colorScheme.secondary.withAlpha(120),
+              Theme.of(context).colorScheme.tertiary.withAlpha(120),
             ],
             transform: const GradientRotation(pi / 40),
           ),

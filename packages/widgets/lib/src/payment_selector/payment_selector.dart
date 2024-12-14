@@ -85,8 +85,7 @@ class _PaymentSelectorWidgetState extends State<PaymentSelectorWidget> {
           },
         );
       case PaymentSelectionState.transfer:
-      default:
-        return const SizedBox();
+      return const SizedBox();
     }
   }
 }
