@@ -14,6 +14,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late AdminHelperCubit adminHelperCubit;
+  AdminHelperState? adminHelperState;
   @override
   void initState() {
     adminHelperCubit = context.read<AdminHelperCubit>();
@@ -24,32 +25,35 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: adminHelperCubit,
-      child: BlocListener(
+      child: BlocListener<AdminHelperCubit, AdminHelperState>(
         bloc: adminHelperCubit,
         listener: (context, state) {
-          if (state is AdminLoggedIn) {
-            setState(() {});
-          }
+          adminHelperState = state;
+          setState(() {});
         },
-        child: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.waiting:
-                return const CircularProgressIndicator();
-              case ConnectionState.active:
-              case ConnectionState.done:
-                if (snapshot.hasData || (!snapshot.hasData && adminHelperCubit.isAdmin)) {
-                  return const MyAppView();
-                } else {
-                  return const AuthScreen();
-                }
-              case ConnectionState.none:
-              return const AuthScreen();
-            }
-          },
-        ),
+        child: adminHelperState is AdminLoggedIn
+            ? const MyAppView()
+            : StreamBuilder<User?>(
+                stream: FirebaseAuth.instance.authStateChanges(),
+                builder: (context, snapshot) => buildTransactionApp(snapshot),
+              ),
       ),
     );
+  }
+
+  Widget buildTransactionApp(AsyncSnapshot<User?> snapshot) {
+    switch (snapshot.connectionState) {
+      case ConnectionState.waiting:
+        return const CircularProgressIndicator();
+      case ConnectionState.active:
+      case ConnectionState.done:
+        if (snapshot.hasData) {
+          return const MyAppView();
+        } else {
+          return const AuthScreen();
+        }
+      case ConnectionState.none:
+        return const AuthScreen();
+    }
   }
 }

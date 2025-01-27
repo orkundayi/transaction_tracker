@@ -9,6 +9,6 @@ class AdminHelperCubit extends Cubit<AdminHelperState> {
   bool _isAdmin = false;
   void setIsAdmin(bool value) {
     _isAdmin = value;
-    emit(AdminLoggedIn());
+    emit(_isAdmin ? AdminLoggedIn() : AdminLoggedOut());
   }
 }
