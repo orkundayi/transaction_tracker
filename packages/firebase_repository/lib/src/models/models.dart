@@ -1,4 +1,4 @@
-library models;
+library;
 
 export 'account.dart';
 export 'account_log.dart';

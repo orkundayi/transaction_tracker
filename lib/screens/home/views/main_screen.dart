@@ -302,7 +302,7 @@ class _MainScreenState extends State<MainScreen> {
                                               Column(
                                                 children: [
                                                   Text(
-                                                    '${getCurrencySymbolFromCurrencyCode(transaction.toCurrencyCode)} ${transaction.amount}',
+                                                    '${getCurrencySymbolFromCurrencyCode(transaction.currencyCode)} ${transaction.amount}',
                                                     style: const TextStyle(
                                                       fontSize: 16,
                                                       fontWeight: FontWeight.bold,

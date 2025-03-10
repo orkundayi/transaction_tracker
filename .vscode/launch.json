@@ -7,39 +7,12 @@
     {
       "name": "flutter_application",
       "request": "launch",
-      "type": "dart"
-    },
-    {
-      "name": "flutter_application (profile mode)",
-      "request": "launch",
       "type": "dart",
-      "flutterMode": "profile"
+      "toolArgs": [
+        "--dart-define",
+        "ADMIN_PASSWORD=Test1234"
+      ]
     },
-    {
-      "name": "flutter_application (release mode)",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "release"
-    },
-    {
-      "name": "firebase_repository",
-      "cwd": "packages\\firebase_repository",
-      "request": "launch",
-      "type": "dart"
-    },
-    {
-      "name": "firebase_repository (profile mode)",
-      "cwd": "packages\\firebase_repository",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "profile"
-    },
-    {
-      "name": "firebase_repository (release mode)",
-      "cwd": "packages\\firebase_repository",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "release"
-    }
   ]
 }
+//flutter run --release --dart-define=ADMIN_PASSWORD=Test*1234

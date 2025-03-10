@@ -1,8 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' hide Intent;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application/app_view.dart';
 import 'package:flutter_application/blocs/admin_helper/admin_helper_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:receive_intent/receive_intent.dart';
 import 'screens/home/views/firebase/auth_screen.dart';
 
 class MyApp extends StatefulWidget {
@@ -18,7 +21,38 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     adminHelperCubit = context.read<AdminHelperCubit>();
+    startIntent();
     super.initState();
+  }
+
+  Future<void> startIntent() async {
+    ReceiveIntent.receivedIntentStream.listen(
+      (Intent? intent) async {
+        if (intent != null && intent.extra != null) {
+          final Map<String, dynamic> extra = intent.extra!;
+          if (extra['openAdminMode'] == true && extra['password'] == const String.fromEnvironment('ADMIN_PASSWORD')) {
+            adminHelperCubit.setIsAdmin(true);
+          }
+          if (extra['returnResponse'] == true) {
+            var androidIntent = AndroidIntent(
+              action: 'p2p.action.listener',
+              type: 'application/json',
+              flags: [0x10000000],
+              package: 'com.orkun.flutter_intent_rest',
+              arguments: {
+                'adminMode': adminHelperCubit.isAdmin,
+              },
+            );
+            await androidIntent.launch();
+          }
+        }
+      },
+      onError: (e) {
+        if (kDebugMode) {
+          print('e');
+        }
+      },
+    );
   }
 
   @override

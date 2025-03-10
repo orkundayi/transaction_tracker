@@ -1,4 +1,4 @@
-library widgets;
+library;
 
 export 'src/category_selector/category_selector.dart';
 export 'src/currency_selector.dart';

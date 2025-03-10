@@ -78,7 +78,7 @@ class _MyChartState extends State<MyChart> {
       style: style,
     );
 
-    return SideTitleWidget(axisSide: meta.axisSide, space: 16, child: title);
+    return SideTitleWidget(space: 16, meta: meta, child: title);
   }
 
   String getIntPlusOneToString(double value) {
@@ -105,7 +105,7 @@ class _MyChartState extends State<MyChart> {
       style: style,
     );
 
-    return SideTitleWidget(axisSide: meta.axisSide, space: 16, child: title);
+    return SideTitleWidget(space: 16, meta: meta, child: title);
   }
 
   String getMoneyReferanceForTurkiye(double value) {

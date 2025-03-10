@@ -48,7 +48,8 @@ class CategoryModel {
       ];
 
   // Belirli CategoryType'ları içermeyenleri döndüren fonksiyon
-  static List<CategoryType> get expenseCategoryTypes => CategoryType.values.where((type) => !incomeCategoryTypes.contains(type)).toList();
+  static List<CategoryType> get expenseCategoryTypes =>
+      CategoryType.values.where((type) => !incomeCategoryTypes.contains(type)).toList();
 
   // Belirli CategoryType'ların sayısını döndüren fonksiyon
   static int get incomeCategoryTypeCount => incomeCategoryTypes.length;
@@ -61,7 +62,7 @@ enum CategoryType {
   // Expenses
   electronics, //elektronik
   education, //eğitim
-  entertainment, //eylence
+  entertainment, //eğlence
   food, //yemek
   health, //sağlık
   transportation, //ulaşım
@@ -79,7 +80,7 @@ getCategoryName(CategoryType? type) {
     case CategoryType.education:
       return 'Eğitim';
     case CategoryType.entertainment:
-      return 'Eylence';
+      return 'Eğlence';
     case CategoryType.food:
       return 'Yemek';
     case CategoryType.health:
